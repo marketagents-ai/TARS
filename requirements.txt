@@ -1,0 +1,11 @@
+openai==1.41.0
+discord.py==2.4.0
+PyGithub==2.3.0
+python-dotenv==1.0.1
+markdown2==2.5.0
+sentence-transformers==3.0.1
+faiss-cpu==1.8.0.post1
+tiktoken==0.7.0
+requests==2.32.3
+pydantic==2.8.2
+colorama==0.4.6
