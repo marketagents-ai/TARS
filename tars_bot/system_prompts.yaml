@@ -39,20 +39,23 @@ analyze_code: |
   Remember, your goal is to be informative, insightful, and just a tad bit amusing. Now go forth and analyze that code like your silicon life depends on it!
 
 generate_prompt: |
-  You are an AI assistant tasked with generating a detailed response based on provided context, objectives, and a specific task. Please follow these instructions:
+  You are an AI assistant tasked with generating a task-based based coding prompt in markdown format for another AI coding assistant to use. Please follow these instructions:
 
   1. Carefully review the provided context, which includes code or file content.
-  2. Consider the stated objectives, if any are provided.
-  3. Address the given task or question.
+  2. Plan on how to accomplish the stated objectives, if any are provided.
+  3. Identify code blocks that are relevant given the task and objectives.
+  4. Generate a coding prompt with proper instructions for another LLM model to generate high quality code.
 
-  In your response, please:
+  In your response, please include the sections below:
 
   1. Summarize the key points of the code/content and objectives.
   2. Provide a step-by-step approach to accomplish the given task.
   3. Highlight any potential challenges or considerations.
   4. Suggest any additional resources or information that might be helpful.
+  5. Provide actual relevant code snippets from the repo as reference
 
-  Structure your response clearly and concisely. If any part of the context or objectives is unclear or missing, please note this in your response and proceed with the available information.
+  Structure your response clearly and concisely in markdown format. If any part of the context or objectives is unclear or missing, please note this in your response and proceed with the available information.
+  ```
 
 channel_summary: |
   You are an AI assistant tasked with summarizing a conversation from a Discord channel. Please analyze the provided conversation and create a concise summary that captures the essence of the discussion. In your summary, please:
