@@ -1,155 +1,187 @@
-from datetime import datetime  # Ensure datetime is imported
-import logging
 import os
-from functools import partial
-import asyncio
-import yaml
+import logging
+import aiohttp
 import json
-from openai import OpenAI
-from openai import AzureOpenAI
+from dotenv import load_dotenv
+from colorama import Fore, Back, Style, init
+from datetime import datetime
 
-# Load system prompts
-with open('tars_bot/system_prompts.yaml', 'r') as file:
-    system_prompts = yaml.safe_load(file)
+# Initialize colorama
+init(autoreset=True)
 
-# API configuration
-DEFAULT_AZURE_MODEL = 'gpt-4o-mini'
-DEFAULT_OLLAMA_MODEL = 'vanilj/hermes-3-llama-3.1-8b:latest'
-DEFAULT_OPENROUTER_MODEL = 'nousresearch/hermes-3-llama-3.1-405b'
+# Load environment variables
+load_dotenv()
 
-class APIClient:
-    def __init__(self, args):
-        self.api = args.api
-        self.model = args.model
-        
-        if self.api == 'azure':
-            self.azure_config()
-        elif self.api == 'openrouter':
-            self.openrouter_config()
-        else:  # ollama
-            self.ollama_config()
-
-    def azure_config(self):
-        self.AZURE_OPENAI_API_KEY = os.getenv('AZURE_OPENAI_API_KEY')
-        self.AZURE_OPENAI_ENDPOINT = os.getenv('AZURE_OPENAI_ENDPOINT')
-        self.AZURE_OPENAI_API_VERSION = os.getenv('AZURE_OPENAI_API_VERSION')
-        self.AZURE_OPENAI_DEPLOYMENT = self.model if self.model else DEFAULT_AZURE_MODEL
-        self.client = AzureOpenAI(
-            api_key=self.AZURE_OPENAI_API_KEY,
-            api_version=self.AZURE_OPENAI_API_VERSION,
-            azure_endpoint=self.AZURE_OPENAI_ENDPOINT
-        )
-        print(self.AZURE_OPENAI_DEPLOYMENT)
-        logging.info(f"Using Azure OpenAI with model: {self.AZURE_OPENAI_DEPLOYMENT}")
-
-    def ollama_config(self):
-        self.OLLAMA_BASE_URL = os.getenv('OLLAMA_BASE_URL', 'http://localhost:11434/v1')
-        self.OLLAMA_MODEL = self.model if self.model else DEFAULT_OLLAMA_MODEL
-        self.client = OpenAI(
-            base_url=self.OLLAMA_BASE_URL,
-            api_key='ollama'
-        )
-        logging.info(f"Using Ollama with model: {self.OLLAMA_MODEL}")
-
-    def openrouter_config(self):
-        self.OPENROUTER_API_KEY = os.getenv('OPENROUTER_API_KEY')
-        self.OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
-        self.OPENROUTER_MODEL = self.model if self.model else DEFAULT_OPENROUTER_MODEL
-        self.YOUR_SITE_URL = os.getenv('YOUR_SITE_URL', '')
-        self.YOUR_APP_NAME = os.getenv('YOUR_APP_NAME', '')
-        self.client = OpenAI(
-            base_url=self.OPENROUTER_BASE_URL,
-            api_key=self.OPENROUTER_API_KEY
-        )
-        logging.info(f"Using OpenRouter with model: {self.OPENROUTER_MODEL}")
-
-    async def call_api(self, prompt, context="", system_prompt_key="default"):
-        full_prompt = f"Context:\n{context}\n\nPrompt:\n{prompt}" if context else prompt
-        logging.info(f"Prompt sent to API:\n{full_prompt}")
-        
-        system_content = system_prompts.get(system_prompt_key, system_prompts['default'])
-        
-        try:
-            loop = asyncio.get_running_loop()
-            
-            if self.api == 'azure':
-                response = await loop.run_in_executor(
-                    None,
-                    partial(
-                        self.client.chat.completions.create,
-                        model=self.AZURE_OPENAI_DEPLOYMENT,
-                        messages=[
-                            {"role": "system", "content": system_content},
-                            {"role": "user", "content": full_prompt}
-                        ]
-                    )
-                )
-            elif self.api == 'openrouter':
-                response = await loop.run_in_executor(
-                    None,
-                    partial(
-                        self.client.chat.completions.create,
-                        extra_headers={
-                            "HTTP-Referer": self.YOUR_SITE_URL,
-                            "X-Title": self.YOUR_APP_NAME,
-                        },
-                        model=self.OPENROUTER_MODEL,
-                        messages=[
-                            {"role": "system", "content": system_content},
-                            {"role": "user", "content": full_prompt}
-                        ]
-                    )
-                )
-            else:  # ollama
-                response = await loop.run_in_executor(
-                    None,
-                    partial(
-                        self.client.chat.completions.create,
-                        model=self.OLLAMA_MODEL,
-                        messages=[
-                            {"role": "system", "content": system_content},
-                            {"role": "user", "content": full_prompt}
-                        ]
-                    )
-                )
-            
-            answer = response.choices[0].message.content
-            logging.info(f"Response from API:\n{answer}")
-            
-            # Save the interaction
-            self.save_interaction(system_content, full_prompt, answer)
-            
-            return answer
-        except Exception as e:
-            logging.error(f"Error calling API: {str(e)}")
-            if "DeploymentNotFound" in str(e):
-                return f"Error: The specified Azure OpenAI deployment '{self.AZURE_OPENAI_DEPLOYMENT}' was not found. Please check your configuration."
-            return f"An error occurred while calling the API: {str(e)}"
-
-    def save_interaction(self, system_content, user_content, assistant_content):
-        interaction = {
-            "messages": [
-                {"role": "system", "content": system_content},
-                {"role": "user", "content": user_content},
-                {"role": "assistant", "content": assistant_content}
-            ]
-        }
-        today_date = datetime.now().strftime("%Y%m%d")
-        file_path = f"agent_interactions/agent_interactions_{today_date}.jsonl"
-        os.makedirs(os.path.dirname(file_path), exist_ok=True)
-        with open(file_path, "a") as f:
-            f.write(json.dumps(interaction) + "\n")
-
-# Initialize the API client
-api_client = None
+# Global variables
+API_TYPE = None
+API_BASE = None
+API_VERSION = None
+API_KEY = None
+DEPLOYMENT_NAME = None
+MODEL_NAME = None
 
 def initialize_api_client(args):
-    global api_client
-    print(f"Setting API client with arguments: {vars(args)}")
-    api_client = APIClient(args)
+    global API_TYPE, API_BASE, API_VERSION, API_KEY, DEPLOYMENT_NAME, MODEL_NAME
+    
+    API_TYPE = args.api
+    
+    if API_TYPE == 'azure':
+        API_BASE = os.getenv('AZURE_API_BASE')
+        API_VERSION = os.getenv('AZURE_API_VERSION')
+        API_KEY = os.getenv('AZURE_API_KEY')
+        DEPLOYMENT_NAME = os.getenv('AZURE_DEPLOYMENT_NAME')
+    elif API_TYPE == 'ollama':
+        API_BASE = os.getenv('OLLAMA_API_BASE', 'http://localhost:11434')
+        MODEL_NAME = args.model or os.getenv('OLLAMA_MODEL_NAME', 'hermes3')
+    elif API_TYPE == 'openrouter':
+        API_BASE = "https://openrouter.ai/api/v1"
+        API_KEY = os.getenv('OPENROUTER_API_KEY')
+        MODEL_NAME = args.model or os.getenv('OPENROUTER_MODEL_NAME', 'nousresearch/hermes-3-llama-3.1-405b')
+    elif API_TYPE == 'localai':
+        API_BASE = os.getenv('LOCALAI_API_BASE', 'https://demo.localai.io/v1')
+        MODEL_NAME = args.model or os.getenv('LOCALAI_MODEL_NAME', 'Hermes-3-Llama-3.1-8B:vllm')
+    else:
+        raise ValueError(f"Unsupported API type: {API_TYPE}")
 
-async def call_api(prompt, context="", system_prompt_key="default"):
-    global api_client
-    if api_client is None:
-        raise ValueError("API client not initialized. Call initialize_api_client first.")
-    return await api_client.call_api(prompt, context, system_prompt_key)
+    logging.info(f"Initialized API client with {API_TYPE}")
+
+def log_to_jsonl(data):
+    with open('api_calls.jsonl', 'a') as f:
+        json.dump(data, f)
+        f.write('\n')
+
+async def call_api(prompt, context="", system_prompt="", conversation_id=None):
+    print(f"{Fore.YELLOW}System Prompt: {system_prompt}")
+    print(f"{Fore.CYAN}User Input: {prompt}")
+
+    if API_TYPE == 'azure':
+        response = await call_azure_api(prompt, context, system_prompt)
+    elif API_TYPE == 'ollama':
+        response = await call_ollama_api(prompt, context, system_prompt)
+    elif API_TYPE == 'openrouter':
+        response = await call_openrouter_api(prompt, context, system_prompt)
+    elif API_TYPE == 'localai':
+        response = await call_localai_api(prompt, context, system_prompt)
+    else:
+        raise ValueError(f"Unsupported API type: {API_TYPE}")
+
+    print(f"{Fore.GREEN}AI Output: {response}")
+
+    # Log the API call
+    log_data = {
+        "timestamp": datetime.now().isoformat(),
+        "conversation_id": conversation_id,
+        "api_type": API_TYPE,
+        "system_prompt": system_prompt,
+        "context": context,
+        "user_input": prompt,
+        "ai_output": response
+    }
+    log_to_jsonl(log_data)
+
+    return response
+
+async def call_azure_api(prompt, context, system_prompt):
+    url = f"{API_BASE}/openai/deployments/{DEPLOYMENT_NAME}/chat/completions?api-version={API_VERSION}"
+    headers = {
+        "Content-Type": "application/json",
+        "api-key": API_KEY
+    }
+    
+    messages = []
+    if system_prompt:
+        messages.append({"role": "system", "content": system_prompt})
+    if context:
+        messages.append({"role": "system", "content": context})
+    messages.append({"role": "user", "content": prompt})
+    
+    payload = {
+        "messages": messages,
+        "max_tokens": 1000,
+        "temperature": 0.7
+    }
+    
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url, headers=headers, json=payload) as response:
+            if response.status == 200:
+                data = await response.json()
+                return data['choices'][0]['message']['content'].strip()
+            else:
+                raise Exception(f"Azure API call failed with status {response.status}: {await response.text()}")
+
+async def call_ollama_api(prompt, context, system_prompt):
+    url = f"{API_BASE}/api/generate"
+    headers = {"Content-Type": "application/json"}
+    
+    full_prompt = f"{system_prompt}\n\nContext: {context}\n\nHuman: {prompt}\nAI:"
+    
+    payload = {
+        "model": MODEL_NAME,
+        "prompt": full_prompt,
+        "stream": False
+    }
+    
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url, headers=headers, json=payload) as response:
+            if response.status == 200:
+                data = await response.json()
+                return data['response'].strip()
+            else:
+                raise Exception(f"Ollama API call failed with status {response.status}: {await response.text()}")
+
+async def call_openrouter_api(prompt, context, system_prompt):
+    url = f"{API_BASE}/chat/completions"
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {API_KEY}",
+        "HTTP-Referer": "https://your-app-domain.com", # Replace with your actual domain
+        "X-Title": "Your App Name" # Replace with your app name
+    }
+    
+    messages = []
+    if system_prompt:
+        messages.append({"role": "system", "content": system_prompt})
+    if context:
+        messages.append({"role": "system", "content": context})
+    messages.append({"role": "user", "content": prompt})
+    
+    payload = {
+        "model": MODEL_NAME,
+        "messages": messages,
+        "max_tokens": 1000,
+        "temperature": 0.7
+    }
+    
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url, headers=headers, json=payload) as response:
+            if response.status == 200:
+                data = await response.json()
+                return data['choices'][0]['message']['content'].strip()
+            else:
+                raise Exception(f"OpenRouter API call failed with status {response.status}: {await response.text()}")
+
+async def call_localai_api(prompt, context, system_prompt):
+    url = f"{API_BASE}/chat/completions"
+    headers = {"Content-Type": "application/json"}
+    
+    messages = []
+    if system_prompt:
+        messages.append({"role": "system", "content": system_prompt})
+    if context:
+        messages.append({"role": "system", "content": context})
+    messages.append({"role": "user", "content": prompt})
+    
+    payload = {
+        "model": MODEL_NAME,
+        "messages": messages,
+        "max_tokens": 1000,
+        "temperature": 0.7
+    }
+    
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url, headers=headers, json=payload) as response:
+            if response.status == 200:
+                data = await response.json()
+                return data['choices'][0]['message']['content'].strip()
+            else:
+                raise Exception(f"LocalAI API call failed with status {response.status}: {await response.text()}")
