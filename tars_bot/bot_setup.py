@@ -1,3 +1,4 @@
+from pathlib import Path
 import discord
 from discord.ext import commands
 from discord import TextChannel, DMChannel
@@ -20,6 +21,9 @@ import logging
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+# Get the directory of the current file
+current_dir = Path(__file__).parent
+
 def setup_bot():
     intents = discord.Intents.default()
     intents.message_content = True
@@ -31,10 +35,10 @@ def setup_bot():
     cache_manager = CacheManager('conversation_history')
     github_repo = GitHubRepo(GITHUB_TOKEN, REPO_NAME)
 
-    with open('prompt_formats.yaml', 'r') as file:
+    with open(f'{current_dir}/prompts/prompt_formats.yaml', 'r') as file:
         prompt_formats = yaml.safe_load(file)
     
-    with open('system_prompts.yaml', 'r') as file:
+    with open(f'{current_dir}/prompts/system_prompts.yaml', 'r') as file:
         system_prompts = yaml.safe_load(file)
 
     @bot.event
