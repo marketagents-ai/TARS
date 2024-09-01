@@ -156,7 +156,12 @@ async def call_openrouter_api(prompt, context, system_prompt):
         async with session.post(url, headers=headers, json=payload) as response:
             if response.status == 200:
                 data = await response.json()
-                return data['choices'][0]['message']['content'].strip()
+                logging.info(f"OpenRouter API response: {data}")  # Add this line
+                if 'choices' in data and data['choices']:
+                    return data['choices'][0]['message']['content'].strip()
+                else:
+                    logging.error(f"Unexpected API response structure: {data}")
+                    return "I'm sorry, but I encountered an error while processing your request."
             else:
                 raise Exception(f"OpenRouter API call failed with status {response.status}: {await response.text()}")
 
