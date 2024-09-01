@@ -1,13 +1,11 @@
 import json
 from datetime import datetime
 import logging
-from nltk.tokenize import sent_tokenize
 from config import TEMP_DIR
 import os
 import re
 import discord
 from api_client import call_api  # Add this line
-
 
 def log_to_jsonl(data):
     with open('bot_log.jsonl', 'a') as f:
@@ -138,8 +136,11 @@ async def process_file(ctx, file_content, filename, memory_index, prompt_formats
             'error': str(e)
         })
 
+def simple_sent_tokenize(text):
+    return re.split(r'(?<=[.!?])\s+', text)
+
 async def send_long_message(channel, message):
-    sentences = sent_tokenize(message)
+    sentences = simple_sent_tokenize(message)
     
     chunks = []
     current_chunk = ""
