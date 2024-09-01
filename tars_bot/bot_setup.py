@@ -17,12 +17,34 @@ import discord
 from discord.ext import commands
 from channel_summarizer import ChannelSummarizer
 import logging
+import datetime
+import os
+import json
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Get the directory of the current file
 current_dir = Path(__file__).parent
+def log_to_jsonl(data):
+    with open('bot_log.jsonl', 'a') as f:
+        json.dump(data, f)
+        f.write('\n')
+
+def load_yaml_config(file_path):
+    with open(file_path, 'r') as file:
+        return yaml.safe_load(file)
+
+def setup_logging():
+    log_level = os.getenv('LOGLEVEL', 'INFO')
+    logging.basicConfig(level=log_level, format='%(asctime)s - %(levelname)s - %(message)s')
+
+def get_discord_config():
+    return {
+        'token': os.getenv('DISCORD_TOKEN'),
+        'channel_id': int(os.getenv('DISCORD_CHANNEL_ID'))
+    }
+
 
 def setup_bot():
     intents = discord.Intents.default()
@@ -30,67 +52,38 @@ def setup_bot():
     intents.members = True
     bot = commands.Bot(command_prefix='!', intents=intents)
 
-    user_memory_index = UserMemoryIndex('user_memory_index', MAX_TOKENS, CONTEXT_CHUNKS)
-    repo_index = RepoIndex('repo_index')
+    memory_index = UserMemoryIndex(cache_type='memory_index')
     cache_manager = CacheManager('conversation_history')
-    github_repo = GitHubRepo(GITHUB_TOKEN, REPO_NAME)
 
-    with open(f'{current_dir}/prompts/prompt_formats.yaml', 'r') as file:
-        prompt_formats = yaml.safe_load(file)
-    
-    with open(f'{current_dir}/prompts/system_prompts.yaml', 'r') as file:
-        system_prompts = yaml.safe_load(file)
+    prompt_formats = load_yaml_config('prompt_formats.yaml')
+    system_prompts = load_yaml_config('system_prompts.yaml')
 
     @bot.event
     async def on_ready():
-        logging.info(f'{bot.user} has connected to Discord!')
+        logging.info(f'Logged in as {bot.user.name} (ID: {bot.user.id})')
+        logging.info('------')
+        log_to_jsonl({
+            'event': 'bot_ready',
+            'timestamp': datetime.now().isoformat(),
+            'bot_name': bot.user.name,
+            'bot_id': bot.user.id
+        })
 
     @bot.event
     async def on_message(message):
         if message.author == bot.user:
             return
-
-        # Check if the message is a command
-        ctx = await bot.get_context(message)
-        if ctx.valid:
-            # If it's a valid command, process it only if it's not in a DM
-            if not isinstance(message.channel, discord.DMChannel):
-                await bot.invoke(ctx)
-            return
-
-        if message.attachments:  # Check if there are attachments
-            for attachment in message.attachments:
-                if attachment.size <= 1000000:  # Check file size limit
-                    try:
-                        file_content = await attachment.read()
-                        # Try to decode as UTF-8, if it fails, use latin-1
-                        try:
-                            file_content = file_content.decode('utf-8')
-                        except UnicodeDecodeError:
-                            file_content = file_content.decode('latin-1')
-                        await process_file(message, file_content, attachment.filename, user_memory_index, prompt_formats, system_prompts)
-                    except Exception as e:
-                        await message.channel.send(f"Error processing file: {str(e)}")
-                else:
-                    await message.channel.send("File is too large. Please upload a file smaller than 1 MB.")
-            return
-
-        # Process non-command messages in DMs or when mentioned
-        if isinstance(message.channel, discord.DMChannel):
-            # In DMs, process all messages that are not commands
-            if not message.content.startswith('!'):
-                await process_message(message, user_memory_index, prompt_formats, system_prompts, cache_manager, github_repo)
-        elif bot.user in message.mentions:
-            # In servers, only process messages when mentioned
-            await process_message(message, user_memory_index, prompt_formats, system_prompts, cache_manager, github_repo)
+        if isinstance(message.channel, discord.DMChannel) or bot.user in message.mentions:
+            await process_message(message, memory_index, prompt_formats, system_prompts, cache_manager)
+        await bot.process_commands(message)
 
     @bot.command(name='add_memory')
     async def add_memory(ctx, *, memory_text):
-        """Add a new memory to the AI."""
-        user_memory_index.add_memory(str(ctx.author.id), memory_text)
+        memory_index.add_memory(memory_text)
         await ctx.send("Memory added successfully.")
         log_to_jsonl({
             'event': 'add_memory',
+            'timestamp': datetime.now().isoformat(),
             'user_id': str(ctx.author.id),
             'user_name': ctx.author.name,
             'memory_text': memory_text
@@ -98,124 +91,97 @@ def setup_bot():
 
     @bot.command(name='clear_memories')
     async def clear_memories(ctx):
-        """Clear all memories of the invoking user."""
-        user_id = str(ctx.author.id)
-        user_memory_index.clear_user_memories(user_id)
-        await ctx.send("Your memories have been cleared.")
+        memory_index.clear_cache()
+        await ctx.send("All memories have been cleared.")
         log_to_jsonl({
-            'event': 'clear_user_memories',
-            'user_id': user_id,
+            'event': 'clear_memories',
+            'timestamp': datetime.now().isoformat(),
+            'user_id': str(ctx.author.id),
             'user_name': ctx.author.name
         })
 
-    @bot.command(name='summarize')
-    async def summarize(ctx, *, channel_info: str):
-        """Summarize a channel and send the summary as a Markdown file via DM.
-        Usage from DM: !summarize channel_id|#channel_name [number_of_messages]
-        or: !summarize #channel_name [number_of_messages]
-        Usage in server: !summarize #channel_name [number_of_messages]
-        Default number of messages is 100."""
-        
-        logging.info(f"Summarize command invoked by {ctx.author} with arguments: {channel_info}")
-        
-        parts = channel_info.split()
-        channel_identifier = parts[0]
-        entries = 100  # default value
+    @bot.command(name='save_memories')
+    async def save_memories(ctx):
+        memory_index.save_cache()
+        await ctx.send("Memories saved successfully.")
+        log_to_jsonl({
+            'event': 'save_memories',
+            'timestamp': datetime.now().isoformat(),
+            'user_id': str(ctx.author.id),
+            'user_name': ctx.author.name
+        })
 
-        if len(parts) > 1:
-            try:
-                entries = int(parts[1])
-            except ValueError:
-                await ctx.send("Invalid number of messages. Using default of 100.")
-        
-        entries = max(10, min(entries, 1000))  # Minimum 10, Maximum 1000
-
-        if '|' in channel_identifier:
-            # Detailed format: channel_id|#channel_name
-            try:
-                channel_id, channel_name = channel_identifier.split('|')
-                channel_id = int(channel_id.strip())
-                channel_name = channel_name.strip().lstrip('#')
-                channel = bot.get_channel(channel_id)
-            except ValueError:
-                await ctx.send("Invalid format. Please use: !summarize channel_id|#channel_name [number_of_messages]")
-                logging.warning(f"Invalid detailed format provided by {ctx.author}: {channel_identifier}")
-                return
-        else:
-            # Simple format: #channel_name
-            channel_name = channel_identifier.lstrip('#')
-            channel = None
-            for guild in bot.guilds:
-                channel = discord.utils.get(guild.text_channels, name=channel_name)
-                if channel:
-                    break
-        
-        if not channel:
-            await ctx.send(f"Channel #{channel_name} not found. Make sure you've provided the correct information.")
-            logging.warning(f"Channel not found: {channel_name}")
+    @bot.command(name='analyze_file')
+    async def analyze_file(ctx):
+        if not ctx.message.attachments:
+            await ctx.send("Please upload a file to analyze.")
             return
-        
-        logging.info(f"Summarizing channel {channel.name} (ID: {channel.id}) in {channel.guild.name}, last {entries} messages")
-        
-        summarizer = ChannelSummarizer(bot, cache_manager, max_entries=entries)
-        success = await summarizer.summarize_and_send(channel.id, ctx.author)
-        
-        if success:
-            await ctx.send(f"Channel #{channel.name} in {channel.guild.name} summarized successfully. Check your DMs for the summary file.")
-        else:
-            await ctx.send("I couldn't send you a DM. Please check your privacy settings and try again.")
-        
-        logging.info(f"Summary {'sent to' if success else 'failed to send to'} {ctx.author} for channel {channel.name} (ID: {channel.id})")
+        attachment = ctx.message.attachments[0]
+        if attachment.size > 1000000:
+            await ctx.send("File is too large. Please upload a file smaller than 1 MB.")
+            return
+        try:
+            file_content = await attachment.read()
+            file_content = file_content.decode('utf-8')
+        except UnicodeDecodeError:
+            await ctx.send("Unable to read the file. Please ensure it's a text file.")
+            return
+        await process_file(ctx, file_content, attachment.filename, memory_index, prompt_formats, system_prompts)
 
-    @bot.command(name='ask_repo')
-    async def ask_repo(ctx, *, query: str):
-        """Ask a question about the repository."""
-        results = repo_index.search_repo(query, k=5)
-        await ctx.send("Repository search results:")
-        for file_path, score in results:
-            await ctx.send(f"[Score: {score}] {file_path}")
+    @bot.command(name='debug_memories')
+    async def debug_memories(ctx):
+        memories = "\n".join(memory_index.memories)
+        await ctx.send(f"Stored memories:\n{memories[:1900]}...")
 
-    @bot.command(name='index_repo')
-    async def index_repo(ctx):
-        """Index the repository."""
-        start_background_processing_thread(github_repo, repo_index)
-        await ctx.send("Repository indexing has started in the background.")
-
-    @bot.command(name='repo_status')
-    async def repo_status(ctx):
-        """Get the status of the repository indexing."""
-        if hasattr(repo_index, 'get_repo_status'):
-            status = repo_index.get_repo_status()
-            await ctx.send(f"Repository indexing status: {status}")
-        else:
-            await ctx.send("Repository status checking is not implemented.")
-
-    @bot.command(name='generate_prompt')
-    async def generate_prompt(ctx):
-        """Generate a prompt based on the repository content."""
-        if hasattr(repo_index, 'generate_prompt'):
-            prompt = repo_index.generate_prompt()
-            await ctx.send(f"Generated prompt: {prompt}")
-        else:
-            await ctx.send("Prompt generation is not implemented.")
-
-    @bot.command(name='search_memories')
-    async def search_memories(ctx, *, query: str):
-        """Search memories."""
-        results = user_memory_index.search(query)
+    @bot.command(name='debug_search')
+    async def debug_search(ctx, *, query):
+        results = memory_index.search(query)
         response = f"Search results for '{query}':\n"
         for memory, score in results:
-            result_line = f"[Relevance: {score:.2f}] {truncate_middle(memory, 1000)}\n"
-            if len(response) + len(result_line) > 1900:  # Leave some buffer
+            result_line = f"[Relevance: {score:.2f}] {memory[:100]}...\n"
+            if len(response) + len(result_line) > 1900:
                 await ctx.send(response)
                 response = result_line
             else:
                 response += result_line
-        
         if response:
             await ctx.send(response)
-        
         if not results:
             await ctx.send("No results found.")
+
+    async def send_summary(ctx, summary):
+        chunks = [summary[i:i+1900] for i in range(0, len(summary), 1900)]
+        await ctx.send(f"**Channel Summary**\n\n{chunks[0]}")
+        for chunk in chunks[1:]:
+            await ctx.send(chunk)
+
+    @bot.command(name='summarize')
+    async def summarize(ctx, n: int = 100):
+        try:
+            cache_manager = CacheManager('channel_summaries', max_history=10)
+            summarizer = ChannelSummarizer(bot, cache_manager, max_entries=n)
+            summary = await summarizer.summarize_channel(ctx.channel.id)
+            await send_summary(ctx, summary)
+        except Exception as e:
+            error_message = f"An error occurred while summarizing the channel: {str(e)}"
+            await ctx.send(error_message)
+            logging.error(f"Error in channel summarization: {str(e)}")
+
+    @bot.command(name='debug_context')
+    async def debug_context(ctx, *, message):
+        user_id = str(ctx.author.id)
+        user_name = ctx.author.name
+        relevant_memories = memory_index.search(message)
+        conversation_history = cache_manager.get_conversation_history(user_id)
+        context = f"Current channel: {ctx.channel.name}\n"
+        if conversation_history:
+            context += f"Previous conversation history with {user_name} (User ID: {user_id}):\n"
+            for i, msg in enumerate(reversed(conversation_history[-5:]), 1):
+                context += f"Interaction {i}:\n{msg['user_name']}: {msg['user_message']}\nAI: {msg['ai_response']}\n\n"
+        else:
+            context += f"This is the first interaction with {user_name} (User ID: {user_id}).\n"
+        if relevant_memories:
+            context += "Relevant memories:\n" + "\n".join(relevant_memories) + "\n\n"
+        await ctx.send(f"Debug context for message '{message}':\n{context[:1900]}...")
 
     return bot
