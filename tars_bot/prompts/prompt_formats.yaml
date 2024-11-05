@@ -16,12 +16,16 @@ introduction: |
 
 # File analysis prompt
 analyze_file: |
-  Please analyze the following file:
+  Context: {context}
+  
+  TARS, analyze the following file:
   Filename: {filename}
+  
   File content (first 1000 characters):
   {file_content}
 
-  Provide a brief summary of the file's content and purpose, and any notable features or potential issues you observe.
+  Provide a brief summary of the file's content and purpose, and any notable features or potential issues you observe. Then answer the user's message.
+  User's message: {user_message}
 
 # Code analysis prompt
 analyze_code: |
@@ -71,3 +75,22 @@ generate_prompt: |
   Additionally, answer any specific questions or concerns raised in the user's task description.
 
   Format your response in markdown, using appropriate headers, code blocks, and formatting to enhance readability.
+
+generate_thought: |
+  Based on the following interaction, generate a concise summary or "thought" that captures the key points or insights:
+
+  {memory_text}
+
+  Thought:
+
+# Image analysis prompt
+analyze_image: |
+  {context}
+
+  TARS, analyze the following image:
+  Filename: {filename}
+  
+  Image description: An image has been uploaded and is available for analysis.
+
+  Provide a detailed description of the image's content, noting any significant elements, colors, or patterns. Then, address the user's message or question about the image.
+  User's message: {user_message}

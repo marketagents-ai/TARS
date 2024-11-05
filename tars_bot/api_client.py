@@ -5,6 +5,12 @@ import json
 from dotenv import load_dotenv
 from colorama import Fore, Back, Style, init
 from datetime import datetime
+import openai
+import anthropic
+import base64
+from io import BytesIO
+from PIL import Image
+import mimetypes
 
 # Initialize colorama
 init(autoreset=True)
@@ -20,26 +26,22 @@ API_KEY = None
 DEPLOYMENT_NAME = None
 MODEL_NAME = None
 
+
 def initialize_api_client(args):
     global API_TYPE, API_BASE, API_VERSION, API_KEY, DEPLOYMENT_NAME, MODEL_NAME
     
     API_TYPE = args.api
     
-    if API_TYPE == 'azure':
-        API_BASE = os.getenv('AZURE_API_BASE')
-        API_VERSION = os.getenv('AZURE_API_VERSION')
-        API_KEY = os.getenv('AZURE_API_KEY')
-        DEPLOYMENT_NAME = os.getenv('AZURE_DEPLOYMENT_NAME')
-    elif API_TYPE == 'ollama':
+    if API_TYPE == 'ollama':
         API_BASE = os.getenv('OLLAMA_API_BASE', 'http://localhost:11434')
         MODEL_NAME = args.model or os.getenv('OLLAMA_MODEL_NAME', 'hermes3')
-    elif API_TYPE == 'openrouter':
-        API_BASE = "https://openrouter.ai/api/v1"
-        API_KEY = os.getenv('OPENROUTER_API_KEY')
-        MODEL_NAME = args.model or os.getenv('OPENROUTER_MODEL_NAME', 'nousresearch/hermes-3-llama-3.1-405b')
-    elif API_TYPE == 'localai':
-        API_BASE = os.getenv('LOCALAI_API_BASE', 'https://demo.localai.io/v1')
-        MODEL_NAME = args.model or os.getenv('LOCALAI_MODEL_NAME', 'Hermes-3-Llama-3.1-8B:vllm')
+    elif API_TYPE == 'openai':
+        API_KEY = os.getenv('OPENAI_API_KEY')
+        MODEL_NAME = args.model or os.getenv('OPENAI_MODEL_NAME', 'chatgpt-4o-latest')
+        openai.api_key = API_KEY
+    elif API_TYPE == 'anthropic':
+        API_KEY = os.getenv('ANTHROPIC_API_KEY')
+        MODEL_NAME = args.model or os.getenv('ANTHROPIC_MODEL_NAME', 'claude-3-5-sonnet-20241022')
     else:
         raise ValueError(f"Unsupported API type: {API_TYPE}")
 
@@ -50,143 +52,191 @@ def log_to_jsonl(data):
         json.dump(data, f)
         f.write('\n')
 
-async def call_api(prompt, context="", system_prompt="", conversation_id=None):
-    print(f"{Fore.YELLOW}System Prompt: {system_prompt}")
-    print(f"{Fore.CYAN}User Input: {prompt}")
+def encode_image(image_path):
+    """Encode image to base64 with proper resizing if needed"""
+    with Image.open(image_path) as img:
+        # Resize if needed (max dimension 1568 for compatibility)
+        max_dim = 1568
+        if max(img.size) > max_dim:
+            ratio = max_dim / max(img.size)
+            new_size = tuple(int(dim * ratio) for dim in img.size)
+            img = img.resize(new_size, Image.Resampling.LANCZOS)
+        
+        # Convert to RGB if needed
+        if img.mode != 'RGB':
+            img = img.convert('RGB')
+        
+        buffered = BytesIO()
+        img.save(buffered, format="JPEG", quality=95)
+        return base64.b64encode(buffered.getvalue()).decode('utf-8')
 
-    if API_TYPE == 'azure':
-        response = await call_azure_api(prompt, context, system_prompt)
-    elif API_TYPE == 'ollama':
-        response = await call_ollama_api(prompt, context, system_prompt)
-    elif API_TYPE == 'openrouter':
-        response = await call_openrouter_api(prompt, context, system_prompt)
-    elif API_TYPE == 'localai':
-        response = await call_localai_api(prompt, context, system_prompt)
+def prepare_image_content(prompt: str, image_paths: list, api_type: str) -> dict:
+    """Prepare image content based on API requirements"""
+    if not image_paths:
+        return prompt
+
+    base64_images = [encode_image(path) for path in image_paths]
+    
+    if api_type == 'anthropic':
+        content = [{"type": "text", "text": prompt}]
+        for img_data in base64_images:
+            content.append({
+                "type": "image",
+                "source": {
+                    "type": "base64",
+                    "media_type": "image/jpeg",
+                    "data": img_data
+                }
+            })
+        return content
+        
+    elif api_type == 'openai':
+        content = [{"type": "text", "text": prompt}]
+        for img_data in base64_images:
+            content.append({
+                "type": "image_url",
+                "image_url": {
+                    "url": f"data:image/jpeg;base64,{img_data}"
+                }
+            })
+        return content
+
+    elif api_type == 'ollama':
+        if len(base64_images) > 1:
+            logging.warning("Ollama only supports one image per request. Using first image.")
+        # Format content to match OpenAI's structure which Ollama now supports
+        return [
+            {"type": "text", "text": prompt},
+            {
+                "type": "image_url",
+                "image_url": {
+                    "url": f"data:image/jpeg;base64,{base64_images[0]}"
+                }
+            }
+        ]
+    
     else:
-        raise ValueError(f"Unsupported API type: {API_TYPE}")
+        raise ValueError(f"Unsupported API type for image handling: {api_type}")
 
-    print(f"{Fore.GREEN}AI Output: {response}")
+async def call_api(prompt, context="", system_prompt="", conversation_id=None, temperature=0.7, image_paths=None):
+    is_image = bool(image_paths)
+    
+    print(f"{Fore.YELLOW}System Prompt: {system_prompt}")
+    print(f"{Fore.CYAN}User Input: {'[Image Content]' if is_image else prompt}")
 
-    # Log the API call
-    log_data = {
-        "timestamp": datetime.now().isoformat(),
-        "conversation_id": conversation_id,
-        "api_type": API_TYPE,
-        "system_prompt": system_prompt,
-        "context": context,
-        "user_input": prompt,
-        "ai_output": response
-    }
-    log_to_jsonl(log_data)
+    try:
+        if is_image:
+            formatted_content = prepare_image_content(prompt, image_paths, API_TYPE)
+        else:
+            formatted_content = prompt
 
-    return response
+        if API_TYPE == 'ollama':
+            response = await call_ollama_api(formatted_content, context, system_prompt, temperature, is_image)
+        elif API_TYPE == 'openai':
+            response = await call_openai_api(formatted_content, context, system_prompt, temperature, is_image)
+        elif API_TYPE == 'anthropic':
+            response = await call_anthropic_api(formatted_content, context, system_prompt, temperature, is_image)
+        else:
+            raise ValueError(f"Unsupported API type: {API_TYPE}")
 
-async def call_azure_api(prompt, context, system_prompt):
-    url = f"{API_BASE}/openai/deployments/{DEPLOYMENT_NAME}/chat/completions?api-version={API_VERSION}"
-    headers = {
-        "Content-Type": "application/json",
-        "api-key": API_KEY
-    }
+        print(f"{Fore.GREEN}AI Output: {response}")
+
+        log_data = {
+            "timestamp": datetime.now().isoformat(),
+            "conversation_id": conversation_id,
+            "api_type": API_TYPE,
+            "system_prompt": system_prompt,
+            "context": context,
+            "user_input": "[Image Content]" if is_image else prompt,
+            "ai_output": response,
+            "is_image": is_image,
+            "num_images": len(image_paths) if image_paths else 0
+        }
+        log_to_jsonl(log_data)
+
+        return response
+    except Exception as e:
+        logging.error(f"Error in API call: {str(e)}")
+        raise
+
+
+async def call_ollama_api(content, context, system_prompt, temperature, is_image):
+    client = openai.AsyncOpenAI(
+        base_url=f"{API_BASE}/v1/",
+        api_key="ollama"  # Required but ignored
+    )
     
     messages = []
     if system_prompt:
         messages.append({"role": "system", "content": system_prompt})
     if context:
         messages.append({"role": "system", "content": context})
-    messages.append({"role": "user", "content": prompt})
+    messages.append({"role": "user", "content": content})
     
-    payload = {
-        "messages": messages,
-        "max_tokens": 1000,
-        "temperature": 0.7
-    }
-    
-    async with aiohttp.ClientSession() as session:
-        async with session.post(url, headers=headers, json=payload) as response:
-            if response.status == 200:
-                data = await response.json()
-                return data['choices'][0]['message']['content'].strip()
-            else:
-                raise Exception(f"Azure API call failed with status {response.status}: {await response.text()}")
+    try:
+        response = await client.chat.completions.create(
+            model=MODEL_NAME,
+            messages=messages,
+            max_tokens=16384,
+            temperature=temperature
+        )
+        return response.choices[0].message.content.strip()
+    except Exception as e:
+        logging.error(f"Ollama API error: {str(e)}")
+        raise Exception(f"Ollama API call failed: {str(e)}")
 
-async def call_ollama_api(prompt, context, system_prompt):
-    url = f"{API_BASE}/api/generate"
-    headers = {"Content-Type": "application/json"}
-    
-    full_prompt = f"{system_prompt}\n\nContext: {context}\n\nHuman: {prompt}\nAI:"
-    
-    payload = {
-        "model": MODEL_NAME,
-        "prompt": full_prompt,
-        "stream": False
-    }
-    
-    async with aiohttp.ClientSession() as session:
-        async with session.post(url, headers=headers, json=payload) as response:
-            if response.status == 200:
-                data = await response.json()
-                return data['response'].strip()
-            else:
-                raise Exception(f"Ollama API call failed with status {response.status}: {await response.text()}")
-
-async def call_openrouter_api(prompt, context, system_prompt):
-    url = f"{API_BASE}/chat/completions"
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {API_KEY}",
-        "HTTP-Referer": "https://your-app-domain.com", # Replace with your actual domain
-        "X-Title": "Your App Name" # Replace with your app name
-    }
+async def call_openai_api(content, context, system_prompt, temperature, is_image):
+    client = openai.AsyncOpenAI(api_key=API_KEY)
     
     messages = []
     if system_prompt:
         messages.append({"role": "system", "content": system_prompt})
     if context:
         messages.append({"role": "system", "content": context})
-    messages.append({"role": "user", "content": prompt})
+    messages.append({"role": "user", "content": content})
     
-    payload = {
-        "model": MODEL_NAME,
-        "messages": messages,
-        "max_tokens": 1000,
-        "temperature": 0.7
-    }
-    
-    async with aiohttp.ClientSession() as session:
-        async with session.post(url, headers=headers, json=payload) as response:
-            if response.status == 200:
-                data = await response.json()
-                logging.info(f"OpenRouter API response: {data}")  # Add this line
-                if 'choices' in data and data['choices']:
-                    return data['choices'][0]['message']['content'].strip()
-                else:
-                    logging.error(f"Unexpected API response structure: {data}")
-                    return "I'm sorry, but I encountered an error while processing your request."
-            else:
-                raise Exception(f"OpenRouter API call failed with status {response.status}: {await response.text()}")
+    try:
+        response = await client.chat.completions.create(
+            model=MODEL_NAME,
+            messages=messages,
+            max_tokens=16384,
+            temperature=temperature
+        )
+        return response.choices[0].message.content.strip()
+    except Exception as e:
+        logging.error(f"OpenAI API error: {str(e)}")
+        raise Exception(f"OpenAI API call failed: {str(e)}")
 
-async def call_localai_api(prompt, context, system_prompt):
-    url = f"{API_BASE}/chat/completions"
-    headers = {"Content-Type": "application/json"}
+async def call_anthropic_api(content, context, system_prompt, temperature, is_image):
+    client = anthropic.AsyncAnthropic(api_key=API_KEY)
     
-    messages = []
-    if system_prompt:
-        messages.append({"role": "system", "content": system_prompt})
-    if context:
-        messages.append({"role": "system", "content": context})
-    messages.append({"role": "user", "content": prompt})
+    try:
+        response = await client.messages.create(
+            model=MODEL_NAME,
+            system=system_prompt,
+            messages=[
+                {"role": "user", "content": content}
+            ],
+            max_tokens=4096,
+            temperature=temperature
+        )
+        return response.content[0].text.strip()
+    except anthropic.APIError as e:
+        error_message = f"Anthropic API error: {str(e)}"
+        logging.error(error_message)
+        raise Exception(error_message)
+    except Exception as e:
+        error_message = f"Unexpected error in Anthropic API call: {str(e)}"
+        logging.error(error_message)
+        raise Exception(error_message)
+
+if __name__ == "__main__":
+    # Example usage
+    import argparse
+    import asyncio
     
-    payload = {
-        "model": MODEL_NAME,
-        "messages": messages,
-        "max_tokens": 1000,
-        "temperature": 0.7
-    }
-    
-    async with aiohttp.ClientSession() as session:
-        async with session.post(url, headers=headers, json=payload) as response:
-            if response.status == 200:
-                data = await response.json()
-                return data['choices'][0]['message']['content'].strip()
-            else:
-                raise Exception(f"LocalAI API call failed with status {response.status}: {await response.text()}")
+    parser = argparse.ArgumentParser(description='Multi-API LLM Client')
+    parser.add_argument('--api', required=True, choices=['ollama', 'openai', 'anthropic'],
+                      help='API type to use')
+    parser.add_argument('--model', help='Model name (optional)')
+
