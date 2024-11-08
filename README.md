@@ -18,6 +18,84 @@ The bot implements a cognitive architecture inspired by human memory and conscio
 
 ## 🛠️ Core Features
 
+```mermaid
+classDiagram
+    class DiscordBot{
+        +setup_bot()
+        +on_ready()
+        +on_message()
+        +commands
+    }
+    
+    class ChannelSummarizer{
+        +bot
+        +cache_manager
+        +max_entries
+        +prompt_formats
+        +system_prompts
+        +summarize_channel()
+        +_summarize_messages()
+        +_process_chunks()
+    }
+    
+    class UserMemoryIndex{
+        +cache_manager
+        +inverted_index
+        +memories
+        +user_memories
+        +add_memory()
+        +clear_user_memories()
+        +search()
+        +save_cache()
+        +load_cache()
+    }
+    
+    class GitHubRepo{
+        +token
+        +repo
+        +get_file_content()
+        +get_directory_structure()
+    }
+    
+    class RepoIndex{
+        +cache_manager
+        +repo_index
+        +index_repo_file()
+        +search_repo()
+        +save_cache()
+        +load_cache()
+    }
+    
+    class MessageProcessing{
+        +process_message()
+        +process_file()
+        +send_long_message()
+        +truncate_middle()
+        +generate_and_save_thought()
+    }
+    
+    class CacheManager{
+        +get_cache_dir()
+        +append_to_conversation()
+        +get_conversation_history()
+    }
+
+    DiscordBot --> ChannelSummarizer
+    DiscordBot --> UserMemoryIndex
+    DiscordBot --> GitHubRepo
+    DiscordBot --> RepoIndex
+    DiscordBot --> MessageProcessing
+    DiscordBot --> CacheManager
+    
+    ChannelSummarizer --> CacheManager
+    UserMemoryIndex --> CacheManager
+    RepoIndex --> CacheManager
+    
+    MessageProcessing --> UserMemoryIndex
+    MessageProcessing --> CacheManager
+    MessageProcessing --> GitHubRepo
+    ```
+
 ### Memory System
 - Indexes and stores user interactions with deduplication
 - Contextual awareness of conversation history
