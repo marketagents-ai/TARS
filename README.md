@@ -94,7 +94,7 @@ classDiagram
     MessageProcessing --> UserMemoryIndex
     MessageProcessing --> CacheManager
     MessageProcessing --> GitHubRepo
-    ```
+```
 
 ### Memory System
 - Indexes and stores user interactions with deduplication
