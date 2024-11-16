@@ -6,8 +6,7 @@
 
 # API call logs
 
-api_calls.jsonl
-bot_log.jsonl
+*.jsonl
 
 # cache folder and archive folders
 cache/
