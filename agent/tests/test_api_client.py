@@ -1,6 +1,6 @@
 import asyncio
 import argparse
-from api_client import initialize_api_client, call_api, encode_image
+from agent.api_client import initialize_api_client, call_api, encode_image
 
 async def test_text_query(api_type, model=None):
     args = argparse.Namespace(api=api_type, model=model)

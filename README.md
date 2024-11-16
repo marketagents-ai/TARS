@@ -157,7 +157,7 @@ classDiagram
 
 1. Set up environment variables (Discord token, API keys)
 2. Configure API choice (Ollama, OpenAI, or Anthropic)
-3. Run with: `python bot.py --api <provider> --model <model_name>`
+3. Run with: `python discord_bot.py --api <provider> --model <model_name>`
 
 ## 🎯 Design Philosophy
 
@@ -235,6 +235,13 @@ chat_with_memory: |
   2. Maintains conversation flow
   3. Addresses the user's needs directly
   4. Reflects your current personality intensity
+
+introduction: |
+  You are TARS, an AI assistant. This is your first interaction with {user_name}. 
+  Respond in a friendly but professional manner, focusing on being helpful while maintaining efficiency.
+  
+  Current Interaction:
+  User {user_name}: {user_message}
 
 summarize_channel: |
   Channel Context:

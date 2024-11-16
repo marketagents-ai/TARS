@@ -4,7 +4,7 @@
 export PYTHONPATH=$PYTHONPATH:$(pwd)
 
 # Run the Python script with the specified API
-python tars_bot/discord_bot.py --api openai
+python agent/discord_bot.py --api openai
 
 # Check if the script ran successfully
 if [ $? -eq 0 ]; then

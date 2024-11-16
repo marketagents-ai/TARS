@@ -1,0 +1,195 @@
+:root {
+    --text: #00ff00;
+    --bg-dark: #1a1a1a;
+    --bg-light: #2a2a2a;
+    --border: #00ff00;
+    --danger: #ff0000;
+    --success: #00cc00;
+    --secondary: #666666;
+}
+
+/* Base styles */
+body {
+    background-color: var(--bg-dark);
+    color: var(--text);
+}
+
+/* Card styles */
+.card-body {
+    background-color: var(--bg-light);
+}
+
+.card-title {
+    color: var(--text);
+    font-family: 'Courier New', monospace;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 20px;
+}
+
+/* Memory list styles */
+.memory-list {
+    max-height: 500px;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    background: var(--bg-dark);
+    padding: 10px;
+}
+
+.memory-card {
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 15px;
+    margin-bottom: 10px;
+    background: var(--bg-dark);
+    box-shadow: inset 0 0 5px var(--text);
+}
+
+.memory-card:hover {
+    box-shadow: 0 0 10px var(--text);
+}
+
+.memory-content {
+    margin-bottom: 10px;
+    color: var(--text);
+    text-shadow: 0 0 5px var(--text);
+}
+
+.memory-metadata {
+    font-size: 0.8em;
+    color: var(--text);
+    opacity: 0.7;
+}
+
+.relevance-score {
+    float: right;
+    padding: 2px 6px;
+    background-color: var(--bg-light);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    font-size: 0.8em;
+}
+
+/* Title and Alert styles */
+.cyber-title {
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid var(--text);
+    padding-bottom: 10px;
+    text-shadow: 0 0 10px var(--text);
+}
+
+.alert {
+    background: var(--bg-dark);
+    border-left: 4px solid var(--text);
+    color: var(--text);
+    font-family: 'Courier New', monospace;
+    padding: 15px;
+}
+
+/* Form controls */
+.form-control, .form-select, input, textarea, select {
+    background-color: var(--bg-dark) !important;
+    color: var(--text) !important;
+    border: 1px solid var(--border) !important;
+}
+
+.form-control:focus, .form-select:focus {
+    box-shadow: 0 0 5px var(--text);
+}
+
+/* Button base style */
+.btn {
+    background-color: var(--bg-dark);
+    border: 1px solid;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 0.9em;
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    box-shadow: 0 0 10px;
+}
+
+.btn:active {
+    transform: scale(0.98);
+}
+
+/* Button variants */
+.btn-primary {
+    border-color: var(--text);
+    color: var(--text);
+}
+
+.btn-primary:hover {
+    background-color: var(--text);
+    color: var(--bg-dark);
+}
+
+.btn-secondary {
+    border-color: var(--secondary);
+    color: var(--secondary);
+}
+
+.btn-secondary:hover {
+    background-color: var(--secondary);
+    color: var(--bg-dark);
+}
+
+.btn-success {
+    border-color: var(--success);
+    color: var(--success);
+}
+
+.btn-success:hover {
+    background-color: var(--success);
+    color: var(--bg-dark);
+}
+
+.btn-danger {
+    border-color: var(--danger);
+    color: var(--danger);
+}
+
+.btn-danger:hover {
+    background-color: var(--danger);
+    color: var(--bg-dark);
+}
+
+/* Modal styles */
+.modal-content {
+    background: var(--bg-dark);
+    border: 1px solid var(--text);
+}
+
+.modal-header, .modal-footer {
+    border-color: var(--border);
+}
+
+.btn-close {
+    filter: invert(1) brightness(200%);
+}
+
+/* Scrollbar styles */
+::-webkit-scrollbar {
+    width: 10px;
+    background: var(--bg-dark);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--text);
+    border-radius: 2px;
+    box-shadow: 0 0 5px var(--text);
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-dark);
+    border: 1px solid var(--border);
+}
+
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--text) var(--bg-dark);
+} 

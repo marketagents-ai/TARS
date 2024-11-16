@@ -34,7 +34,7 @@ def initialize_api_client(args):
     
     if API_TYPE == 'ollama':
         API_BASE = os.getenv('OLLAMA_API_BASE', 'http://localhost:11434')
-        MODEL_NAME = args.model or os.getenv('OLLAMA_MODEL_NAME', 'hermes3')
+        MODEL_NAME = args.model or os.getenv('OLLAMA_MODEL_NAME', 'llama3.2-vision')
     elif API_TYPE == 'openai':
         API_KEY = os.getenv('OPENAI_API_KEY')
         MODEL_NAME = args.model or os.getenv('OPENAI_MODEL_NAME', 'chatgpt-4o-latest')
@@ -42,6 +42,9 @@ def initialize_api_client(args):
     elif API_TYPE == 'anthropic':
         API_KEY = os.getenv('ANTHROPIC_API_KEY')
         MODEL_NAME = args.model or os.getenv('ANTHROPIC_MODEL_NAME', 'claude-3-5-sonnet-20241022')
+    elif API_TYPE == 'vllm':
+        API_BASE = os.getenv('VLLM_API_BASE', 'http://62.169.159.179:8000')
+        MODEL_NAME = args.model or os.getenv('VLLM_MODEL_NAME', 'NousResearch/Hermes-3-Llama-3.1-70B')
     else:
         raise ValueError(f"Unsupported API type: {API_TYPE}")
 
@@ -104,7 +107,6 @@ def prepare_image_content(prompt: str, image_paths: list, api_type: str) -> dict
     elif api_type == 'ollama':
         if len(base64_images) > 1:
             logging.warning("Ollama only supports one image per request. Using first image.")
-        # Format content to match OpenAI's structure which Ollama now supports
         return [
             {"type": "text", "text": prompt},
             {
@@ -122,7 +124,7 @@ async def call_api(prompt, context="", system_prompt="", conversation_id=None, t
     is_image = bool(image_paths)
     
     print(f"{Fore.YELLOW}System Prompt: {system_prompt}")
-    print(f"{Fore.CYAN}User Input: {'[Image Content]' if is_image else prompt}")
+    print(f"{Fore.CYAN}User Input: {f'[Image] {prompt}' if is_image else prompt}")
 
     try:
         if is_image:
@@ -136,6 +138,8 @@ async def call_api(prompt, context="", system_prompt="", conversation_id=None, t
             response = await call_openai_api(formatted_content, context, system_prompt, temperature, is_image)
         elif API_TYPE == 'anthropic':
             response = await call_anthropic_api(formatted_content, context, system_prompt, temperature, is_image)
+        elif API_TYPE == 'vllm':
+            response = await call_vllm_api(formatted_content, context, system_prompt, temperature)
         else:
             raise ValueError(f"Unsupported API type: {API_TYPE}")
 
@@ -147,7 +151,7 @@ async def call_api(prompt, context="", system_prompt="", conversation_id=None, t
             "api_type": API_TYPE,
             "system_prompt": system_prompt,
             "context": context,
-            "user_input": "[Image Content]" if is_image else prompt,
+            "user_input": f"[Image] {prompt}" if is_image else prompt,
             "ai_output": response,
             "is_image": is_image,
             "num_images": len(image_paths) if image_paths else 0
@@ -159,6 +163,44 @@ async def call_api(prompt, context="", system_prompt="", conversation_id=None, t
         logging.error(f"Error in API call: {str(e)}")
         raise
 
+async def call_vllm_api(content, context, system_prompt, temperature):
+    """Call vLLM API endpoint"""
+    async with aiohttp.ClientSession() as session:
+        # Combine prompts if present
+        full_prompt = ""
+        if system_prompt:
+            full_prompt += f"{system_prompt}\n"
+        if context:
+            full_prompt += f"{context}\n"
+        full_prompt += content
+
+        headers = {
+            "Content-Type": "application/json"
+        }
+        
+        data = {
+            "model": MODEL_NAME,
+            "prompt": full_prompt,
+            "max_tokens": 4096,  # Default value, could be made configurable
+            "temperature": 0.5 + temperature
+        }
+        
+        try:
+            async with session.post(
+                f"{API_BASE}/v1/completions",
+                headers=headers,
+                json=data
+            ) as response:
+                if response.status != 200:
+                    error_text = await response.text()
+                    raise Exception(f"vLLM API returned status {response.status}: {error_text}")
+                
+                result = await response.json()
+                return result["choices"][0]["text"].strip()
+        except aiohttp.ClientError as e:
+            error_message = f"vLLM API request failed: {str(e)}"
+            logging.error(error_message)
+            raise Exception(error_message)
 
 async def call_ollama_api(content, context, system_prompt, temperature, is_image):
     client = openai.AsyncOpenAI(
@@ -230,13 +272,87 @@ async def call_anthropic_api(content, context, system_prompt, temperature, is_im
         logging.error(error_message)
         raise Exception(error_message)
 
+async def get_embeddings(text, model=None):
+    """Get embeddings from various API providers.
+    
+    Args:
+        text (str): Text to get embeddings for
+        model (str, optional): Override default embedding model
+        
+    Returns:
+        list: Vector embeddings
+    """
+    if API_TYPE == 'openai':
+        client = openai.AsyncOpenAI(api_key=API_KEY)
+        embed_model = model or "text-embedding-3-small"
+        try:
+            response = await client.embeddings.create(
+                model=embed_model,
+                input=text
+            )
+            return response.data[0].embedding
+        except Exception as e:
+            logging.error(f"OpenAI embeddings error: {str(e)}")
+            raise Exception(f"OpenAI embeddings failed: {str(e)}")
+            
+    elif API_TYPE == 'ollama':
+        embed_model = model or "nomic-embed-text"
+        async with aiohttp.ClientSession() as session:
+            try:
+                async with session.post(
+                    f"{API_BASE}/api/embeddings",
+                    json={
+                        "model": embed_model,
+                        "prompt": text
+                    }
+                ) as response:
+                    result = await response.json()
+                    return result["embedding"]
+            except Exception as e:
+                logging.error(f"Ollama embeddings error: {str(e)}")
+                raise Exception(f"Ollama embeddings failed: {str(e)}")
+    
+    elif API_TYPE == 'vllm':
+        embed_model = model or os.getenv('VLLM_EMBED_MODEL', 'jinaai/jina-embeddings-v2-base-en')
+        async with aiohttp.ClientSession() as session:
+            try:
+                async with session.post(
+                    "http://38.128.232.35:8080/embed",
+                    json={
+                        "model": embed_model,
+                        "inputs": text
+                    }
+                ) as response:
+                    if response.status != 200:
+                        error_text = await response.text()
+                        raise Exception(f"vLLM embeddings API returned status {response.status}: {error_text}")
+                    
+                    result = await response.json()
+                    logging.debug(f"VLLM API Response: {result}")
+                    
+                    if isinstance(result, list):
+                        return result[0]
+                    elif isinstance(result, dict) and "embeddings" in result:
+                        return result["embeddings"][0]
+                    else:
+                        return result
+                        
+            except Exception as e:
+                logging.error(f"vLLM embeddings error: {str(e)}")
+                raise Exception(f"vLLM embeddings failed: {str(e)}")
+    
+    else:
+        raise ValueError(f"Embeddings not supported for API type: {API_TYPE}")
+
+
+
+
 if __name__ == "__main__":
-    # Example usage
     import argparse
     import asyncio
     
     parser = argparse.ArgumentParser(description='Multi-API LLM Client')
-    parser.add_argument('--api', required=True, choices=['ollama', 'openai', 'anthropic'],
+    parser.add_argument('--api', required=True, choices=['ollama', 'openai', 'anthropic', 'vllm'],
                       help='API type to use')
     parser.add_argument('--model', help='Model name (optional)')
-
+    # Add other arguments as needed
