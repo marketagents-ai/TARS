@@ -2,6 +2,9 @@
 
 A simple web interface for managing and editing Discord bot agent memories stored in a inverted index as a pickle file.
 
+![image](https://github.com/user-attachments/assets/34e91da9-a170-45f7-9bc0-1848e3ba14a7)
+
+
 ## Overview
 
 The Discord Agent Memory Editor is a web-based tool that allows you to manage, search, and edit memory entries for Discord bot agents. 
