@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Chat Interface</title>
+    <link href="/static/style.css" rel="stylesheet">
+</head>
+<body>
+    <h1>AI Chat Interface</h1>
+
+    <div id="chat-container"></div>
+    <div id="input-container">
+        <input type="text" id="message-input" placeholder="Type your message...">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+
+    <script>
+        const userId = 'user_' + Math.random().toString(36).substr(2, 9);
+        const userName = 'WebUser_' + userId;
+        let ws;
+
+        function connectWebSocket() {
+            const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${wsProtocol}//${window.location.host}/ws/${userId}`;
+            console.log('Connecting to WebSocket:', wsUrl);
+            
+            ws = new WebSocket(wsUrl);
+            
+            ws.onopen = function() {
+                console.log('WebSocket connected');
+                appendMessage('system', 'Connected to chat server');
+            };
+            
+            ws.onmessage = function(event) {
+                console.log('Received message:', event.data);
+                appendMessage('bot', event.data);
+            };
+
+            ws.onclose = function() {
+                console.log('WebSocket disconnected');
+                appendMessage('system', 'Disconnected from chat server. Reconnecting...');
+                setTimeout(connectWebSocket, 1000);
+            };
+
+            ws.onerror = function(error) {
+                console.error('WebSocket error:', error);
+                appendMessage('system', 'Error connecting to chat server');
+            };
+        }
+
+        connectWebSocket();
+
+        function appendMessage(sender, content) {
+            const container = document.getElementById('chat-container');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}-message`;
+            messageDiv.textContent = content;
+            container.appendChild(messageDiv);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('message-input');
+            const message = input.value.trim();
+            
+            if (!message) return;
+
+            appendMessage('user', message);
+            input.value = '';
+
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    user_id: userId,
+                    user_name: userName,
+                    message: message
+                }));
+            } else {
+                appendMessage('system', 'Not connected to chat server. Trying to reconnect...');
+                connectWebSocket();
+            }
+        }
+
+        async function uploadFiles() {
+            const fileInput = document.getElementById('file-input');
+            const files = fileInput.files;
+            
+            if (files.length === 0) return;
+
+            const formData = new FormData();
+            for (let file of files) {
+                formData.append('files', file);
+            }
+            formData.append('user_id', userId);
+            formData.append('user_name', userName);
+
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                appendMessage('bot', data.response);
+            } catch (error) {
+                console.error('Error:', error);
+                appendMessage('bot', 'Sorry, there was an error uploading your files.');
+            }
+
+            fileInput.value = ''; // Clear the file input
+        }
+
+        // Handle Enter key in message input
+        document.getElementById('message-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html> 

@@ -1,11 +1,29 @@
-openai==1.41.0
+# Core Dependencies
 discord.py==2.4.0
-PyGithub==2.3.0
-python-dotenv==1.0.1
-markdown2==2.5.0
-sentence-transformers==3.0.1
-faiss-cpu==1.8.0.post1
-tiktoken==0.7.0
-requests==2.32.3
+openai==1.41.0
+anthropic==0.8.1
 pydantic==2.8.2
+python-dotenv==1.0.1
+
+# API and HTTP
+aiohttp==3.9.3
+requests==2.32.3
+
+# Natural Language Processing
+sentence-transformers==3.0.1
+nltk==3.8.1
+tiktoken==0.7.0
+
+# Vector Search
+faiss-cpu==1.8.0.post1
+
+# File Processing and Formatting
+markdown2==2.5.0
+PyYAML==6.0.1
+Pillow==10.2.0
+
+# GitHub Integration
+PyGithub==2.3.0
+
+# Development Tools
 colorama==0.4.6
