@@ -22,7 +22,7 @@ import base64
 import string
 import threading
 import nltk
-# nltk.download('punkt', quiet=True)
+nltk.download('punkt', quiet=True)
 from nltk.tokenize import sent_tokenize
 
 # Configuration imports
