@@ -1,6 +1,6 @@
 from collections import defaultdict
-from api_client import call_api
-from cache_manager import CacheManager
+from agent.api_client import call_api
+from agent.cache_manager import CacheManager
 
 # Channel summarization
 class ChannelSummarizer:

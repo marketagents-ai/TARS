@@ -7,9 +7,9 @@ import string
 import re
 from collections import defaultdict, Counter
 from github import Github
-from cache_manager import CacheManager
+from agent.cache_manager import CacheManager
 
-from bot_config import *
+from agent.bot_config import *
 
 # Global variable for repository processing status
 repo_processing_event = asyncio.Event()
