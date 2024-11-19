@@ -26,9 +26,10 @@ nltk.download('punkt', quiet=True)
 from nltk.tokenize import sent_tokenize
 
 # Configuration imports
-from bot_config import *
-from api_client import initialize_api_client, call_api
-from cache_manager import CacheManager
+from agent.bot_config import *
+from agent.api_client import initialize_api_client, call_api
+from agent.cache_manager import CacheManager
+from market_agents.orchestrators.discord_orchestrator import MessageProcessor
 
 # image handling
 from PIL import Image
@@ -36,11 +37,11 @@ import io
 import traceback
 
 # import tools
-from tools.discordSUMMARISER import ChannelSummarizer
-from tools.discordGITHUB import *
+from agent.tools.discordSUMMARISER import ChannelSummarizer
+from agent.tools.discordGITHUB import *
 
 # import memory module
-from memory import UserMemoryIndex
+from agent.memory import UserMemoryIndex
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -619,7 +620,7 @@ def setup_bot():
     intents.message_content = True
     intents.members = True
     bot = commands.Bot(command_prefix='!', intents=intents, status=discord.Status.online)  
-    
+
     # Initialize with specific cache types
     user_memory_index = UserMemoryIndex('user_memory_index')
     repo_index = RepoIndex('repo_index')
@@ -628,7 +629,7 @@ def setup_bot():
 
     with open(os.path.join(script_dir, 'prompts', 'prompt_formats.yaml'), 'r') as file:
         prompt_formats = yaml.safe_load(file)
-    
+
     with open(os.path.join(script_dir, 'prompts', 'system_prompts.yaml'), 'r') as file:
         system_prompts = yaml.safe_load(file)
 
@@ -639,13 +640,27 @@ def setup_bot():
     conversation_cache = CacheManager('conversation_history')
     file_cache = CacheManager('file_cache')
     prompt_cache = CacheManager('prompt_cache')
-    
+
     # Store cache managers on the bot instance for access in commands
     bot.cache_managers = {
         'conversation': conversation_cache,
         'file': file_cache,
         'prompt': prompt_cache
     }
+
+    # Store other necessary objects on the bot instance
+    bot.user_memory_index = user_memory_index
+    bot.repo_index = repo_index
+    bot.cache_manager = cache_manager
+    bot.github_repo = github_repo
+    bot.prompt_formats = prompt_formats
+    bot.system_prompts = system_prompts
+
+    # Initialize the MessageProcessor with the bot instance
+    bot.message_processor = MessageProcessor(bot)
+
+    # Initialize message cache for accumulating messages
+    bot.message_cache = {}
 
     @bot.event
     async def on_ready():
@@ -658,6 +673,12 @@ def setup_bot():
             'bot_id': bot.user.id
         })
 
+        # Now that the bot is ready, set bot_id in MessageProcessor
+        bot.message_processor.bot_id = str(bot.user.id)
+
+        # Set up the agent asynchronously
+        await bot.message_processor.setup_agent()
+
     @bot.event
     async def on_message(message):
         if message.author == bot.user:
@@ -669,6 +690,7 @@ def setup_bot():
             await bot.invoke(ctx)
             return
 
+        # Handle direct messages or mentions
         if isinstance(message.channel, discord.DMChannel) or bot.user in message.mentions:
             if message.attachments:
                 attachment = message.attachments[0]
@@ -676,9 +698,9 @@ def setup_bot():
                     try:
                         await process_files(
                             message=message,
-                            memory_index=user_memory_index,
-                            prompt_formats=prompt_formats,
-                            system_prompts=system_prompts,
+                            memory_index=bot.user_memory_index,
+                            prompt_formats=bot.prompt_formats,
+                            system_prompts=bot.system_prompts,
                             user_message=message.content,
                             bot=bot
                         )
@@ -687,7 +709,56 @@ def setup_bot():
                 else:
                     await message.channel.send("File is too large. Please upload a file smaller than 1 MB.")
             else:
-                await process_message(message, user_memory_index, prompt_formats, system_prompts, cache_manager, github_repo)
+                await process_message(
+                    message,
+                    bot.user_memory_index,
+                    bot.prompt_formats,
+                    bot.system_prompts,
+                    bot.cache_manager,
+                    bot.github_repo
+                )
+        else:
+            # Accumulate messages from other channels
+            channel_id = message.channel.id
+            if not hasattr(bot, 'message_cache'):
+                bot.message_cache = {}
+
+            if channel_id not in bot.message_cache:
+                bot.message_cache[channel_id] = []
+
+            bot.message_cache[channel_id].append({
+                "content": message.content,
+                "author_id": str(message.author.id),
+                "author_name": message.author.name,
+                "timestamp": message.created_at.isoformat()
+            })
+
+            # Keep the cache size limited per channel
+            if len(bot.message_cache[channel_id]) > 20:
+                bot.message_cache[channel_id].pop(0)
+
+            # If the number of messages accumulated reaches a threshold, process them
+            if len(bot.message_cache[channel_id]) >= 10:
+                # Process the messages through the agent
+                channel_info = {
+                    "id": str(message.channel.id),
+                    "name": message.channel.name
+                }
+
+                # Process the messages using the MessageProcessor
+                results = await bot.message_processor.process_messages(channel_info, bot.message_cache[channel_id])
+
+                if results:
+                    # Process the agent's action
+                    action_result = results.get('action')
+                    if action_result and action_result.get('content'):
+                        # Send the agent's message to the channel
+                        await message.channel.send(action_result['content'])
+                else:
+                    logging.error("Message processing failed")
+
+                # Clear the message cache for this channel
+                bot.message_cache[channel_id] = []
                 
     @bot.command(name='persona')
     async def set_persona_intensity(ctx, intensity: int = None):
