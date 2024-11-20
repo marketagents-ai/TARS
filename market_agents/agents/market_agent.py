@@ -197,6 +197,6 @@ class MarketAgent(LLMAgent):
                 "total_reward": round(total_reward, 4),
                 "timestamp": datetime.now().isoformat()
             })
-            return response.get("reflection", "")
+            return response
         else:
             return response

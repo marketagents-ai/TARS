@@ -11,7 +11,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-class DiscordMessage(BaseModel):
+class DiscordInputMessage(BaseModel):
     content: str
     message_type: Literal["user_message", "agent_message"]
     author_id: str
@@ -19,6 +19,10 @@ class DiscordMessage(BaseModel):
     channel_id: str
     channel_name: str
     timestamp: str
+
+class DiscordMessage(BaseModel):
+    type: Literal["markdown", "text"]
+    content: str
 
 class DiscordAction(LocalAction):
     action: DiscordMessage
@@ -29,13 +33,8 @@ class DiscordAction(LocalAction):
         return cls(
             agent_id=agent_id,
             action=DiscordMessage(
+                message_type="markdown",
                 content="Sample message",
-                message_type="agent_message",
-                author_id=agent_id,
-                author_name=f"Agent_{agent_id}",
-                channel_id="sample_channel",
-                channel_name="Sample Channel",
-                timestamp=datetime.now().isoformat()
             )
         )
 
@@ -53,7 +52,7 @@ class DiscordLocalObservation(LocalObservation):
 
 class DiscordGlobalObservation(GlobalObservation):
     observations: Dict[str, DiscordLocalObservation]
-    all_messages: List[DiscordMessage]
+    all_messages: List[DiscordInputMessage]
 
 class DiscordActionSpace(ActionSpace):
     allowed_actions: List[Type[LocalAction]] = [DiscordAction]
@@ -65,7 +64,7 @@ class DiscordMechanism(Mechanism):
     max_rounds: int = Field(default=1000, description="Maximum number of simulation rounds")
     current_round: int = Field(default=0, description="Current round number")
     sequential: bool = Field(default=False, description="Whether the mechanism is sequential")
-    messages: List[DiscordMessage] = Field(default_factory=list)
+    messages: List[DiscordInputMessage] = Field(default_factory=list)
     global_state: Dict[str, Any] = Field(default_factory=dict)  # Add global_state field
 
     def step(self, action: Union[DiscordAction, Dict[str, Any]]) -> Union[LocalEnvironmentStep, EnvironmentStep]:
@@ -137,7 +136,7 @@ class DiscordMechanism(Mechanism):
         # Update messages
         messages = environment_info.get("messages", [])
         self.messages = [
-            DiscordMessage(
+            DiscordInputMessage(
                 content=msg["content"],
                 message_type="user_message" if msg["author_id"] != environment_info["bot_id"] else "agent_message",
                 author_id=msg["author_id"],
