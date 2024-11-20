@@ -9,8 +9,8 @@ from typing import List, Tuple, Optional, Dict, Any
 import string
 import re
 
-from bot_config import *
-from cache_manager import CacheManager
+from agent.bot_config import *
+from agent.cache_manager import CacheManager
 
 # Memory
 
