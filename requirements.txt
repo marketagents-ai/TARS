@@ -1,6 +1,6 @@
 # Natural Language Processing
 sentence-transformers==3.3.1
-nltk==3.9.1
+nltk==3.8.1
 tiktoken==0.8.0
 
 # Vector Search
