@@ -199,9 +199,9 @@ async def process_message(message, memory_index, cache_manager, bot, is_command=
             reflection = result.get('reflection')
 
             if action_result and action_result.get('content'):
-                response_content = f"```json\n<perception>\n{json.dumps(perception, indent=2)}\n</perception>```\n"
-                response_content += f"{action_result['content']['action']['content']}\n"
-                response_content += f"```json\n<reflection>\n{json.dumps(reflection, indent=2)}\n</reflection>```"
+                #response_content = f"```json\n<perception>\n{json.dumps(perception, indent=2)}\n</perception>```\n"
+                response_content = action_result['content']['action']['content']
+                #response_content += f"```json\n<reflection>\n{json.dumps(reflection, indent=2)}\n</reflection>```"
                 await send_long_message(message.channel, response_content)
                 # Fix the logging statement here
                 logging.info(f"Sent response to {user_name} (ID: {user_id}): {response_content[:1000] if response_content else ''}")
@@ -560,12 +560,11 @@ def setup_bot():
                 # Process the messages using the MessageProcessor
                 results = await bot.message_processor.process_messages(channel_info, bot.message_cache[channel_id])
 
-                if results:
-                    # Process the agent's action
-                    action_result = results.get('action')
-                    if action_result and action_result.get('content'):
-                        # Send the agent's message to the channel
-                        await message.channel.send(action_result['content'])
+                action_result = results.get('action')
+
+                if action_result and action_result.get('content'):
+                    response_content = action_result['content']['action']['content']
+                    await message.channel.send(response_content)
                 else:
                     logging.error("Message processing failed")
 
