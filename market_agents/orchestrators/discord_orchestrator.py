@@ -151,6 +151,29 @@ class MessageProcessor:
             print("\nAction Result:")
             print("\033[92m" + json.dumps(action_result, indent=2) + "\033[0m")
 
+            # Create task for reflection to run in parallel
+            reflection_task = asyncio.create_task(self._run_reflection())
+
+            # Return action result immediately
+            response = {
+                "perception": perception_result,
+                "action": action_result,
+                "reflection": None
+            }
+
+            # Clear messages from mechanism after processing core functions
+            self.environment.mechanism.messages = []
+            logger.info("Cleared messages from mechanism")
+
+            return response
+
+        except Exception as e:
+            logger.error(f"Error processing messages: {str(e)}", exc_info=True)
+            return None
+
+    async def _run_reflection(self):
+        """Run reflection as a separate async task"""
+        try:
             # Reflection
             reflection_result = await self.agent.reflect('discord')
             logger.info("Reflection completed")
@@ -170,18 +193,10 @@ class MessageProcessor:
                     self.memory_index.save_cache()
                     logger.info("Saved reflection to memory index")
 
-            # Clear messages from mechanism after processing
-            self.environment.mechanism.messages = []
-            logger.info("Cleared messages from mechanism")
-
-            return {
-                "perception": perception_result,
-                "action": action_result,
-                "reflection": reflection_result
-            }
+            return reflection_result
 
         except Exception as e:
-            logger.error(f"Error processing messages: {str(e)}", exc_info=True)
+            logger.error(f"Error during reflection: {str(e)}", exc_info=True)
             return None
 
 async def run_bot():
