@@ -42,6 +42,8 @@ from tools.discordGITHUB import *
 # import memory module
 from memory import UserMemoryIndex
 
+import time
+
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
 # Set up logging
@@ -260,6 +262,7 @@ async def process_files(message, memory_index, prompt_formats, system_prompts, u
     image_files = []
     text_contents = []
     temp_paths = []
+    response_content = None
     
     # Track detected types for prompt selection
     has_images = False
@@ -271,7 +274,7 @@ async def process_files(message, memory_index, prompt_formats, system_prompts, u
         persona_intensity = str(bot.persona_intensity if bot else DEFAULT_PERSONA_INTENSITY)
         logging.info(f"Using persona intensity: {persona_intensity}")
         
-        # Build context once
+        # Build context once before entering typing indicator
         context = f"Current channel: {message.channel.name if hasattr(message.channel, 'name') else 'Direct Message'}\n\n"
         context += "**Ongoing Chatroom Conversation:**\n\n"
         messages = []
@@ -283,6 +286,7 @@ async def process_files(message, memory_index, prompt_formats, system_prompts, u
             context += f"{msg}\n"
         context += "\n"
 
+        # Main processing block with typing indicator
         async with message.channel.typing():
             # First pass: Check all file types before processing
             for attachment in message.attachments:
@@ -309,7 +313,7 @@ async def process_files(message, memory_index, prompt_formats, system_prompts, u
                     )
                     continue
 
-                # Now process the file based on its confirmed type
+                # Process file based on type
                 if is_image:
                     temp_path = f"temp_{attachment.filename}"
                     try:
@@ -369,7 +373,7 @@ async def process_files(message, memory_index, prompt_formats, system_prompts, u
             has_images = bool(image_files)
             has_text = bool(text_contents)
 
-            # Validate required prompts based on file types
+            # Validate required prompts
             if has_images and has_text:
                 if 'analyze_combined' not in prompt_formats or 'combined_analysis' not in system_prompts:
                     raise ValueError("Missing required combined analysis prompts")
@@ -417,6 +421,7 @@ async def process_files(message, memory_index, prompt_formats, system_prompts, u
 
             logging.info(f"Using prompt type: {'combined' if has_images and has_text else 'image' if has_images else 'text'}")
             
+            # Make the API call within the typing indicator
             try:
                 response_content = await call_api(
                     prompt=prompt,
@@ -430,9 +435,11 @@ async def process_files(message, memory_index, prompt_formats, system_prompts, u
                 logging.error(traceback.format_exc())
                 raise ValueError(f"API call failed: {str(api_error)}")
 
+        # Send response outside of typing indicator
+        if response_content:
             await send_long_message(message.channel, response_content)
-            
-            # Generate memory text
+        
+            # Prepare memory text for background processing
             files_description = []
             if image_files:
                 files_description.append(f"{len(image_files)} images: {', '.join(image_files)}")
@@ -441,7 +448,8 @@ async def process_files(message, memory_index, prompt_formats, system_prompts, u
                 
             memory_text = f"Analyzed {' and '.join(files_description)} for User {user_name}. User's message: {user_message}. Analysis: {response_content}"
             
-            await generate_and_save_thought(
+            # Create background task for thought generation
+            asyncio.create_task(generate_and_save_thought(
                 memory_index=memory_index,
                 user_id=user_id,
                 user_name=user_name,
@@ -449,7 +457,7 @@ async def process_files(message, memory_index, prompt_formats, system_prompts, u
                 prompt_formats=prompt_formats,
                 system_prompts=system_prompts,
                 bot=bot
-            )
+            ))
 
             # Log the analysis
             log_to_jsonl({
@@ -612,44 +620,318 @@ async def generate_and_save_thought(memory_index, user_id, user_name, memory_tex
     memory_index.add_memory(user_id, f"Priors on interactions with @{user_name}: {thought_response} (Timestamp: {timestamp})")
 
 
-# Bot setup
+# Embedding function
+async def get_embeddings(self, text):
+    """Get embeddings using Ollama by default"""
+    # Temporarily store and modify API_TYPE to use Ollama
+    from api_client import API_TYPE, get_embeddings
+    original_api = API_TYPE
+    import api_client
+    api_client.API_TYPE = 'ollama'  # Force Ollama for embeddings
+    
+    try:
+        embeddings = await get_embeddings(text, model='nomic-embed-text')
+        return embeddings
+    finally:
+        # Restore original API type
+        api_client.API_TYPE = original_api
 
-def setup_bot():
+# Add after imports, before bot setup
+class ChannelMonitor:
+    def __init__(self, bot, cache_manager, memory_index, prompt_formats, system_prompts, github_repo):
+        self.bot = bot
+        self.cache_manager = cache_manager
+        self.memory_index = memory_index
+        self.prompt_formats = prompt_formats
+        self.system_prompts = system_prompts
+        self.github_repo = github_repo
+        
+        # Tracking state
+        self.active = False
+        self.tasks = {}
+        self.last_check = {}
+        self.feature_triggers = {}
+        self.check_interval = 60
+        self.context_window = 2
+        
+        # Load features and initialize embeddings
+        self.attention_features = self._load_attention_features()
+        self.feature_embeddings = {}
+
+        # Add embedding configuration
+        self.embed_api = 'ollama'  # Default to ollama
+        self.embed_model = 'nomic-embed-text'
+        self.embed_base = os.getenv('OLLAMA_API_BASE', 'http://localhost:11434')
+        
+        logging.info("Initializing Channel Monitor with attention awareness features")
+        logging.info(f"Using embedding model: {self.embed_model} via {self.embed_api}")
+        logging.info(f"Embedding API endpoint: {self.embed_base}")
+
+    def _load_attention_features(self):
+        """Load and validate attention features from config"""
+        feature_path = os.path.join(script_dir, 'config/attention_features.yaml')
+        try:
+            with open(feature_path, 'r') as f:
+                features = yaml.safe_load(f)
+                # Validate feature format
+                valid_features = 0
+                for name, data in features.items():
+                    required = {'text', 'threshold', 'cooldown'}
+                    if not all(k in data for k in required):
+                        logging.error(f"Feature '{name}' missing required fields: {required}")
+                        continue
+                    valid_features += 1
+                    logging.info(f"Loaded attention feature '{name}' (threshold: {data['threshold']}, cooldown: {data['cooldown']}s)")
+                
+                logging.info(f"Successfully loaded {valid_features}/{len(features)} attention features")
+                return features
+        except Exception as e:
+            logging.error(f"Error loading attention features from {feature_path}: {e}")
+            return {}
+
+    async def initialize(self):
+        """Initialize feature embeddings with rate limiting"""
+        logging.info("Starting feature embedding generation...")
+        total_features = len(self.attention_features)
+        processed = 0
+        
+        for feature_name, feature_data in self.attention_features.items():
+            try:
+                processed += 1
+                logging.info(f"Generating embedding for feature '{feature_name}' ({processed}/{total_features})")
+                
+                # Rate limit embedding generation
+                if len(self.feature_embeddings) > 0:
+                    await asyncio.sleep(1)  # Prevent API flooding
+                
+                self.feature_embeddings[feature_name] = await self.get_embeddings(feature_data['text'])
+                logging.info(f"✓ Successfully generated embedding for '{feature_name}'")
+                
+            except Exception as e:
+                logging.error(f"✗ Failed to generate embedding for '{feature_name}': {e}")
+                traceback.print_exc()
+                    
+        if not self.feature_embeddings:
+            logging.warning("⚠ No feature embeddings were generated - channel monitoring will be limited")
+        else:
+            logging.info(f"✓ Successfully generated {len(self.feature_embeddings)}/{total_features} feature embeddings")
+
+    async def start(self):
+        """Initialize and start monitoring"""
+        if self.active:
+            return
+            
+        try:
+            # Initialize embeddings
+            await self.initialize()
+            self.active = True
+            # Removed duplicate log
+        except Exception as e:
+            logging.error(f"Failed to initialize channel monitor: {e}")
+            raise
+
+    def _can_trigger_feature(self, feature_name, channel_id):
+        """Check if feature can be triggered based on cooldowns"""
+        now = time.time()
+        key = f"{channel_id}:{feature_name}"
+        
+        if key in self.feature_triggers:
+            last_trigger, cooldown = self.feature_triggers[key]
+            time_since_trigger = now - last_trigger
+            
+            if time_since_trigger < cooldown:
+                time_remaining = cooldown - time_since_trigger
+                logging.debug(f"⏳ Feature '{feature_name}' in cooldown for #{channel_id}. Available in {time_remaining:.1f}s")
+                return False
+            else:
+                logging.debug(f"✓ Feature '{feature_name}' available for #{channel_id}")
+                
+        return True
+
+    def _update_feature_trigger(self, feature_name, channel_id):
+        """Update feature trigger timing"""
+        key = f"{channel_id}:{feature_name}"
+        cooldown = self.attention_features[feature_name].get('cooldown', 300)
+        self.feature_triggers[key] = (time.time(), cooldown)
+        logging.debug(f"⏱️ Set cooldown for '{feature_name}' in #{channel_id} ({cooldown}s)")
+
+    async def check_channel(self, channel):
+        """Check channel for attention triggers"""
+        if not self.active:
+            return
+
+        now = time.time()
+        channel_id = str(channel.id)
+        
+        # Check channel-level cooldown with improved logging
+        if channel_id in self.last_check:
+            time_since_last = now - self.last_check[channel_id]
+            if time_since_last < self.check_interval:
+                time_remaining = self.check_interval - time_since_last
+                logging.debug(f"⏳ Channel #{channel.name} in cooldown. Next check in {time_remaining:.1f}s")
+                return
+
+        try:
+            # Get recent messages
+            messages = []
+            authors = set()
+            async for msg in channel.history(limit=self.context_window):
+                if not msg.author.bot:
+                    messages.append(msg)
+                    authors.add(msg.author.id)
+
+            if len(messages) < 2 or len(authors) < 2:
+                return
+
+            # Build context
+            context_text = " ".join(msg.content for msg in reversed(messages))
+            context_embedding = await self.get_embeddings(context_text)
+
+            # Check features
+            for feature_name, feature_data in self.attention_features.items():
+                if not self._can_trigger_feature(feature_name, channel_id):
+                    continue
+
+                similarity = self._cosine_similarity(
+                    context_embedding,
+                    self.feature_embeddings[feature_name]
+                )
+
+                if similarity >= feature_data['threshold']:
+                    logging.info(f"🔔 Attention trigger '{feature_name}' activated in #{channel.name}")
+                    logging.info(f"   Similarity: {similarity:.3f} (threshold: {feature_data['threshold']})")
+                    logging.info(f"   Participants: {len(authors)}")
+                    
+                    # Update trigger timing
+                    self._update_feature_trigger(feature_name, channel_id)
+                    
+                    # Log trigger
+                    log_to_jsonl({
+                        'event': 'attention_triggered',
+                        'timestamp': datetime.now().isoformat(),
+                        'channel': channel.name,
+                        'feature': feature_name,
+                        'similarity': float(similarity),
+                        'context': context_text[:500],
+                        'participants': len(authors)
+                    })
+
+                    # Create synthetic message
+                    synthetic_msg = type('SyntheticMessage', (), {
+                        'content': context_text,
+                        'channel': channel,
+                        'author': messages[-1].author,
+                        'attachments': [],
+                        'created_at': messages[-1].created_at,
+                        'mentions': messages[-1].mentions
+                    })
+
+                    # Use existing process_message flow
+                    await process_message(
+                        message=synthetic_msg,
+                        memory_index=self.memory_index,
+                        prompt_formats=self.prompt_formats,
+                        system_prompts=self.system_prompts,
+                        cache_manager=self.cache_manager,
+                        github_repo=self.github_repo,
+                        feature_context={
+                            'name': feature_name,
+                            'similarity': similarity
+                        }
+                    )
+
+            self.last_check[channel_id] = now
+
+        except Exception as e:
+            logging.error(f"Error checking channel #{channel.name}: {e}")
+            traceback.print_exc()
+
+    def _cosine_similarity(self, v1, v2):
+        """Calculate cosine similarity between two vectors"""
+        dot_product = sum(a * b for a, b in zip(v1, v2))
+        norm1 = sum(a * a for a in v1) ** 0.5
+        norm2 = sum(b * b for b in v2) ** 0.5
+        return dot_product / (norm1 * norm2)
+
+    async def get_embeddings(self, text):
+        """Get embeddings using Ollama by default"""
+        # Temporarily store and modify API_TYPE to use Ollama
+        from api_client import API_TYPE, API_BASE, get_embeddings
+        original_api = API_TYPE
+        original_base = API_BASE
+        import api_client
+        api_client.API_TYPE = 'ollama'  # Force Ollama for embeddings
+        api_client.API_BASE = os.getenv('OLLAMA_API_BASE', 'http://localhost:11434')
+        
+        try:
+            embeddings = await get_embeddings(text, model='nomic-embed-text')
+            return embeddings
+        finally:
+            # Restore original API settings
+            api_client.API_TYPE = original_api
+            api_client.API_BASE = original_base
+
+# Bot setup
+def setup_bot(prompt_path=None, bot_id=None):
+    """Initialize the Discord bot with specified configuration.
+    
+    Args:
+        prompt_path (str, optional): Path to prompt files directory
+        bot_id (str, optional): Bot identifier for separate cache management
+    """
     intents = discord.Intents.default()
     intents.message_content = True
     intents.members = True
     bot = commands.Bot(command_prefix='!', intents=intents, status=discord.Status.online)  
     
-    # Initialize with specific cache types
-    user_memory_index = UserMemoryIndex('user_memory_index')
-    repo_index = RepoIndex('repo_index')
-    cache_manager = CacheManager('conversation_history')  # Keep existing name for compatibility
+    # Create bot prefix for cache management
+    bot_prefix = f"{bot_id}_" if bot_id else ""
+    
+    # Initialize with specific cache types and bot prefix by including prefix in repo_name
+    user_memory_index = UserMemoryIndex(f'{bot_prefix}user_memory_index')
+    repo_index = RepoIndex(f'{bot_prefix}repo_index')
+    cache_manager = CacheManager(f'{bot_prefix}conversation_history')
     github_repo = GitHubRepo(GITHUB_TOKEN, REPO_NAME)
 
-    with open(os.path.join(script_dir, 'prompts', 'prompt_formats.yaml'), 'r') as file:
+    # Use the provided prompt_path or fall back to default
+    prompt_path = prompt_path or os.path.join(script_dir, 'prompts')
+    
+    # Load prompts using the configured path
+    with open(os.path.join(prompt_path, 'prompt_formats.yaml'), 'r') as file:
         prompt_formats = yaml.safe_load(file)
     
-    with open(os.path.join(script_dir, 'prompts', 'system_prompts.yaml'), 'r') as file:
+    with open(os.path.join(prompt_path, 'system_prompts.yaml'), 'r') as file:
         system_prompts = yaml.safe_load(file)
-
+    
     # Add this variable to store the current persona intensity
     bot.persona_intensity = DEFAULT_PERSONA_INTENSITY
 
-    # Initialize cache managers for different purposes
-    conversation_cache = CacheManager('conversation_history')
-    file_cache = CacheManager('file_cache')
-    prompt_cache = CacheManager('prompt_cache')
-    
-    # Store cache managers on the bot instance for access in commands
+    # Remove duplicate cache manager initialization
     bot.cache_managers = {
-        'conversation': conversation_cache,
-        'file': file_cache,
-        'prompt': prompt_cache
+        'conversation': cache_manager,  # Reuse the existing cache_manager
+        'file': CacheManager(f'{bot_prefix}file_cache'),
+        'prompt': CacheManager(f'{bot_prefix}prompt_cache')
     }
+
+    # Initialize channel monitor
+    channel_monitor = ChannelMonitor(
+        bot=bot,
+        cache_manager=cache_manager,  # Use the same cache_manager instance
+        memory_index=user_memory_index,
+        prompt_formats=prompt_formats,
+        system_prompts=system_prompts,
+        github_repo=github_repo
+    )
+    bot.channel_monitor = channel_monitor
 
     @bot.event
     async def on_ready():
         logging.info(f'Logged in as {bot.user.name} (ID: {bot.user.id})')
+        try:
+            await bot.channel_monitor.start()
+            logging.info('Channel monitor initialized')
+        except Exception as e:
+            logging.error(f'Failed to initialize channel monitor: {e}')
         logging.info('------')
         log_to_jsonl({
             'event': 'bot_ready',
@@ -669,6 +951,7 @@ def setup_bot():
             await bot.invoke(ctx)
             return
 
+        # Regular message processing
         if isinstance(message.channel, discord.DMChannel) or bot.user in message.mentions:
             if message.attachments:
                 attachment = message.attachments[0]
@@ -688,6 +971,10 @@ def setup_bot():
                     await message.channel.send("File is too large. Please upload a file smaller than 1 MB.")
             else:
                 await process_message(message, user_memory_index, prompt_formats, system_prompts, cache_manager, github_repo)
+        
+        # Check for attention triggers if in a text channel
+        elif isinstance(message.channel, discord.TextChannel):
+            await bot.channel_monitor.check_channel(message.channel)
                 
     @bot.command(name='persona')
     async def set_persona_intensity(ctx, intensity: int = None):
@@ -933,8 +1220,7 @@ def setup_bot():
 
             # Determine the code type based on file extension
             _, file_extension = os.path.splitext(file_path)
-            code_type = mimetypes.types_map.get(file_extension, "").split('/')[-1] or "plaintext"
-            
+            code_type = mimetypes.types_map.get            
             # Check if the necessary keys exist in prompt_formats and system_prompts
             if 'generate_prompt' not in prompt_formats:
                 await ctx.send("Error: 'generate_prompt' template is missing from prompt_formats.")
@@ -1122,11 +1408,61 @@ def setup_bot():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run the Discord bot with selected API and model')
-    parser.add_argument('--api', choices=['ollama', 'openai', 'anthropic', 'vllm'], default='ollama', help='Choose the API to use (default: ollama)')
-    parser.add_argument('--model', type=str, help='Specify the model to use. If not provided, defaults will be used based on the API.')
+    parser.add_argument('--api', choices=['ollama', 'openai', 'anthropic', 'vllm'], 
+                        default='ollama', help='Choose the API to use (default: ollama)')
+    parser.add_argument('--model', type=str, 
+                        help='Specify the model to use. If not provided, defaults will be used based on the API.')
+    parser.add_argument('--prompt-path', type=str, 
+                        default='agent/prompts',
+                        help='Path to prompt files directory (default: agent/prompts)')
+    parser.add_argument('--bot-name', type=str,
+                        help='Name of the bot to run (used for token and cache management)')
+
     args = parser.parse_args()
 
-    initialize_api_client(args)
+    # Ensure prompt path is absolute
+    prompt_path = os.path.abspath(args.prompt_path)
+    if not os.path.exists(prompt_path):
+        logging.critical(f"Prompt path does not exist: {prompt_path}")
+        exit(1)
 
-    bot = setup_bot()
-    bot.run(TOKEN)
+    # Select appropriate token based on bot name
+    if args.bot_name:
+        token_env_var = f'DISCORD_TOKEN_{args.bot_name.upper()}'
+        TOKEN = os.getenv(token_env_var)
+        if not TOKEN:
+            logging.critical(f"No token found for bot '{args.bot_name}' (Environment variable: {token_env_var})")
+            exit(1)
+        logging.info(f"Running as {args.bot_name}")
+    else:
+        TOKEN = os.getenv('DISCORD_TOKEN')  # Fall back to default token
+        if not TOKEN:
+            logging.critical("No Discord token found in environment variables")
+            exit(1)
+
+    initialize_api_client(args)
+    
+    MAX_RETRIES = 3
+    retry_count = 0
+    
+    while retry_count < MAX_RETRIES:
+        try:
+            bot = setup_bot(prompt_path=prompt_path, bot_id=args.bot_name)
+            bot.run(TOKEN, reconnect=True)
+            break  # If bot.run() completes normally, exit the loop
+            
+        except discord.errors.LoginFailure as e:
+            logging.critical(f"Login failed (invalid token): {str(e)}")
+            break  # Don't retry on login failures
+            
+        except Exception as e:
+            retry_count += 1
+            logging.error(f"Critical error occurred (attempt {retry_count}/{MAX_RETRIES}): {str(e)}")
+            
+            if retry_count < MAX_RETRIES:
+                wait_time = 5 * retry_count  # Exponential backoff
+                logging.info(f"Waiting {wait_time} seconds before retry...")
+                time.sleep(wait_time)
+            else:
+                logging.critical("Maximum retry attempts reached. Shutting down.")
+                break

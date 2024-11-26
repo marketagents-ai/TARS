@@ -1,0 +1,148 @@
+2024-11-17 17:58:49,881 - INFO - Initialized API client with anthropic
+2024-11-17 17:58:49,881 - INFO - Initialized API client with anthropic
+2024-11-17 17:58:49,881 - INFO - Initializing memory manager with path: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-17 17:58:49,881 - INFO - Found pickle file at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-17 17:58:49,895 - INFO - Loaded 1313 memories
+2024-11-17 17:58:49,895 - INFO - Loaded 8 users
+2024-11-17 17:58:49,896 - INFO - Loaded 232286 index entries
+2024-11-17 17:58:49,903 - INFO - Successfully loaded prompt files
+2024-11-17 17:58:49,909 - INFO - Found pickle file at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\web_memory.pkl
+2024-11-17 17:58:49,910 - INFO - Loaded 35 memories
+2024-11-17 17:58:49,910 - INFO - Loaded 2 users
+2024-11-17 17:58:49,911 - INFO - Loaded 3404 index entries
+2024-11-17 17:58:55,289 - INFO - WebSocket client web_epwh9kdam disconnected
+2024-11-17 17:58:55,323 - INFO - Project root directory: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS
+2024-11-17 17:58:55,323 - INFO - Looking for cache at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-17 17:58:55,323 - INFO - Cache directory exists: True
+2024-11-17 17:58:55,323 - INFO - Cache file exists: True
+2024-11-17 17:58:55,323 - INFO - Cache file size: 2264973 bytes
+2024-11-17 17:58:55,324 - INFO - Found pickle file at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-17 17:58:55,336 - INFO - Loaded 1313 memories
+2024-11-17 17:58:55,336 - INFO - Loaded 8 users
+2024-11-17 17:58:55,337 - INFO - Loaded 232286 index entries
+2024-11-17 17:59:01,363 - ERROR - WebSocket error: 'WebBot' object has no attribute 'process_websocket_message'
+2024-11-17 18:00:38,475 - INFO - Initialized API client with anthropic
+2024-11-17 18:00:38,476 - INFO - Initialized API client with anthropic
+2024-11-17 18:00:38,476 - INFO - Initializing memory manager with path: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-17 18:00:38,476 - INFO - Found pickle file at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-17 18:00:38,486 - INFO - Loaded 1313 memories
+2024-11-17 18:00:38,487 - INFO - Loaded 8 users
+2024-11-17 18:00:38,487 - INFO - Loaded 232286 index entries
+2024-11-17 18:00:38,497 - INFO - Successfully loaded prompt files
+2024-11-17 18:00:38,502 - INFO - Found pickle file at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\web_memory.pkl
+2024-11-17 18:00:38,502 - INFO - Loaded 35 memories
+2024-11-17 18:00:38,503 - INFO - Loaded 2 users
+2024-11-17 18:00:38,503 - INFO - Loaded 3404 index entries
+2024-11-17 18:00:49,908 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2024-11-17 18:00:52,518 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2024-11-17 18:00:52,527 - INFO - Saved 1314 memories to C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-17 18:00:52,535 - INFO - Saved 1315 memories to C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-17 18:00:52,535 - INFO - Saved thought for user WebUser: <thought>A first interaction with a new user calls for a friendly yet professional greeting, acknowl...
+2024-11-17 18:00:55,088 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2024-11-17 18:00:55,095 - INFO - Saved 1316 memories to C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-17 18:00:55,101 - INFO - Saved 1317 memories to C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-17 18:00:55,102 - INFO - Saved thought for user WebUser: <thought>
+A new interaction begins, and my role is to provide helpful yet efficient assistance while...
+2024-11-17 18:01:20,494 - INFO - Project root directory: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS
+2024-11-17 18:01:20,494 - INFO - Looking for cache at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-17 18:01:20,494 - INFO - Cache directory exists: True
+2024-11-17 18:01:20,495 - INFO - Cache file exists: True
+2024-11-17 18:01:20,495 - INFO - Cache file size: 2268683 bytes
+2024-11-17 18:01:20,495 - INFO - Found pickle file at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-17 18:01:20,512 - INFO - Loaded 1317 memories
+2024-11-17 18:01:20,512 - INFO - Loaded 9 users
+2024-11-17 18:01:20,513 - INFO - Loaded 232613 index entries
+2024-11-17 18:02:28,863 - INFO - WebSocket client web_oytvlr8cl disconnected
+2024-11-17 18:03:32,932 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2024-11-17 18:03:38,023 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2024-11-17 18:03:38,031 - INFO - Saved 1318 memories to C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-17 18:03:38,037 - INFO - Saved 1319 memories to C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-17 18:03:38,037 - INFO - Saved thought for user WebUser: <thought>
+As an AI assistant, my role is to provide helpful information and engage in friendly conve...
+2024-11-17 18:03:40,417 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2024-11-17 18:03:40,424 - INFO - Saved 1320 memories to C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-17 18:03:40,431 - INFO - Saved 1321 memories to C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-17 18:03:40,431 - INFO - Saved thought for user WebUser: <thought>As an AI assistant, my purpose is to engage with users in a friendly and professional manne...
+2024-11-17 18:03:52,129 - INFO - WebSocket client web_dpkd4mgtr disconnected
+2024-11-17 18:04:59,368 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2024-11-17 18:05:01,750 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2024-11-17 18:05:01,758 - INFO - Saved 1322 memories to C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-17 18:05:01,765 - INFO - Saved 1323 memories to C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-17 18:05:01,766 - INFO - Saved thought for user WebUser: <thought>A cordial yet focused greeting to initiate our interaction, establishing my readiness to pr...
+2024-11-17 18:05:04,052 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2024-11-17 18:05:04,058 - INFO - Saved 1324 memories to C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-17 18:05:04,065 - INFO - Saved 1325 memories to C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-17 18:05:04,065 - INFO - Saved thought for user WebUser: <thought>
+A cordial yet concise greeting to a new user, establishing professionalism and readiness t...
+2024-11-17 18:05:25,169 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2024-11-17 18:05:28,018 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2024-11-17 18:05:28,027 - INFO - Saved 1326 memories to C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-17 18:05:28,034 - INFO - Saved 1327 memories to C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-17 18:05:28,035 - INFO - Saved thought for user WebUser: <thought>
+As an AI assistant without a physical form, my "days" consist of engaging conversations, p...
+2024-11-17 18:05:32,980 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2024-11-17 18:05:32,988 - INFO - Saved 1328 memories to C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-17 18:05:32,994 - INFO - Saved 1329 memories to C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-17 18:05:32,994 - INFO - Saved thought for user WebUser: <thought>
+The key points from this interaction are:
+- The user's casual and relaxed tone suggests an...
+2024-11-17 18:06:28,369 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2024-11-17 18:06:30,868 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2024-11-17 18:06:30,877 - INFO - Saved 1330 memories to C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-17 18:06:30,884 - INFO - Saved 1331 memories to C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-17 18:06:30,884 - INFO - Saved thought for user WebUser: <thought>
+The key points are:
+- Building friendly rapport with the user through casual conversation ...
+2024-11-17 18:06:36,355 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2024-11-17 18:06:36,362 - INFO - Saved 1332 memories to C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-17 18:06:36,368 - INFO - Saved 1333 memories to C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-17 18:06:36,369 - INFO - Saved thought for user WebUser: <thought>
+The user seems friendly and open to casual conversation, presenting an opportunity to buil...
+2024-11-17 18:07:29,570 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2024-11-17 18:07:32,593 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2024-11-17 18:07:32,601 - INFO - Saved 1334 memories to C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-17 18:07:32,608 - INFO - Saved 1335 memories to C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-17 18:07:32,608 - INFO - Saved thought for user WebUser: <thought>
+This interaction allows me to build a fun, playful rapport with WebUser while satisfying t...
+2024-11-17 18:07:37,340 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2024-11-17 18:07:37,348 - INFO - Saved 1336 memories to C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-17 18:07:37,355 - INFO - Saved 1337 memories to C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-17 18:07:37,357 - INFO - Saved thought for user WebUser: <thought>
+This casual interaction allows me to connect with the user on a personal level by showing ...
+2024-11-17 18:09:25,942 - INFO - Saved 1318 memories to C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-17 18:13:35,197 - INFO - WebSocket client web_leoxvqn04 disconnected
+2024-11-19 22:47:50,810 - INFO - Initialized API client with anthropic
+2024-11-19 22:47:50,810 - INFO - Initialized API client with anthropic
+2024-11-19 22:47:50,810 - INFO - Initializing memory manager with path: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-19 22:47:50,811 - INFO - Found pickle file at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-19 22:47:50,822 - INFO - Loaded 1339 memories
+2024-11-19 22:47:50,822 - INFO - Loaded 9 users
+2024-11-19 22:47:50,823 - INFO - Loaded 237167 index entries
+2024-11-19 22:47:50,826 - INFO - Successfully loaded prompt files
+2024-11-19 22:47:50,832 - INFO - Found pickle file at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\web_memory.pkl
+2024-11-19 22:47:50,840 - INFO - Loaded 35 memories
+2024-11-19 22:47:50,840 - INFO - Loaded 2 users
+2024-11-19 22:47:50,840 - INFO - Loaded 3404 index entries
+2024-11-19 22:47:54,548 - INFO - Project root directory: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS
+2024-11-19 22:47:54,548 - INFO - Looking for cache at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-19 22:47:54,549 - INFO - Cache directory exists: True
+2024-11-19 22:47:54,549 - INFO - Cache file exists: True
+2024-11-19 22:47:54,549 - INFO - Cache file size: 2305808 bytes
+2024-11-19 22:47:54,550 - INFO - Found pickle file at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-19 22:47:54,563 - INFO - Loaded 1339 memories
+2024-11-19 22:47:54,564 - INFO - Loaded 9 users
+2024-11-19 22:47:54,564 - INFO - Loaded 237167 index entries
+2024-11-19 22:48:07,455 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2024-11-19 22:48:15,139 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2024-11-19 22:48:15,149 - INFO - Saved 1340 memories to C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-19 22:48:15,155 - INFO - Saved 1341 memories to C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-19 22:48:15,156 - INFO - Saved thought for user WebUser: Here is a reflective thought on that initial interaction:
+
+That friendly greeting and introduction s...
+2024-11-19 22:48:21,585 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2024-11-19 22:48:21,592 - INFO - Saved 1342 memories to C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-19 22:48:21,599 - INFO - Saved 1343 memories to C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-19 22:48:21,599 - INFO - Saved thought for user WebUser: Here is a reflective thought about that recent interaction:
+
+That initial greeting seemed to go well...
+2024-11-19 22:48:54,111 - INFO - WebSocket client web_0nn3qyr1s disconnected

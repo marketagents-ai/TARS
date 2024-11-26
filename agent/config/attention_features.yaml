@@ -1,0 +1,19 @@
+technical_discussion:
+  text: "Discussion about code implementation, programming concepts, technical problems, debugging, development workflow"
+  threshold: 0.82
+  cooldown: 300  # seconds
+
+project_planning:
+  text: "Discussion about project architecture, system design, planning features, organizing development work"
+  threshold: 0.85
+  cooldown: 600
+
+help_request:
+  text: "Questions about implementation, requests for assistance, debugging help, how to implement features"
+  threshold: 0.80
+  cooldown: 120
+
+code_review:
+  text: "Code review discussion, feedback on implementation, suggestions for improvement, code quality discussion"
+  threshold: 0.83
+  cooldown: 300 

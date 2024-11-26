@@ -299,8 +299,9 @@ async def get_embeddings(text, model=None):
         embed_model = model or "nomic-embed-text"
         async with aiohttp.ClientSession() as session:
             try:
+                url = f"{API_BASE}/api/embeddings"
                 async with session.post(
-                    f"{API_BASE}/api/embeddings",
+                    url,
                     json={
                         "model": embed_model,
                         "prompt": text

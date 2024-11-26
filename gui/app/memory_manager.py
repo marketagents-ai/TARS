@@ -16,6 +16,11 @@ class MemoryManager:
     """Manages operations on the memory pickle file"""
     
     def __init__(self, pickle_path: str):
+        # Convert relative path to absolute path if needed
+        if not os.path.isabs(pickle_path):
+            # Store in a 'cache' directory within the project
+            pickle_path = os.path.join(os.getcwd(), 'cache', pickle_path)
+        
         self.pickle_path = Path(pickle_path)
         self.inverted_index = defaultdict(list)  # Maps words to memory IDs
         self.memories = []  # List of all memory texts
@@ -23,8 +28,8 @@ class MemoryManager:
         self.stopwords = set(['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 
                             'at', 'to', 'for', 'of', 'with', 'by'])
         
-        # Ensure cache directory exists
-        os.makedirs(os.path.dirname(pickle_path), exist_ok=True)
+        # Create cache directory if it doesn't exist
+        os.makedirs(os.path.dirname(self.pickle_path), exist_ok=True)
         self.load_memories()
     
     def load_memories(self) -> None:

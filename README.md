@@ -8,7 +8,7 @@
 
 ## 🧠 Cognitive Architecture
 
-The bot implements a cognitive architecture inspired by human memory and consciousness:
+The bot implements a cognitive architecture modelled on human memory and consciousness:
 
 - **Episodic Memory**: Stores and indexes user interactions, conversations, and experiences
 - **Working Memory**: Maintains active context through recent conversation history

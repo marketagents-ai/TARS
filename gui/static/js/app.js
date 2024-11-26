@@ -2,6 +2,10 @@ let currentEditId = null;
 const API_BASE = '/api';
 let userList = [];
 
+// Chat WebSocket connection
+let ws = null;
+let clientId = 'web_' + Math.random().toString(36).substr(2, 9);
+
 async function loadUserList() {
     try {
         const response = await fetch(`${API_BASE}/users`);
@@ -178,6 +182,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // Run initial search
     searchMemories();
+    
+    // Initialize WebSocket connection
+    connectWebSocket();
 });
 
 // Edit memory
@@ -251,5 +258,57 @@ async function deleteMemory(id) {
     } catch (error) {
         console.error('Error:', error);
         alert('Error deleting memory: ' + error.message);
+    }
+}
+
+function connectWebSocket() {
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${wsProtocol}//${window.location.host}/ws/${clientId}`;
+    
+    ws = new WebSocket(wsUrl);
+    
+    ws.onopen = () => {
+        console.log('WebSocket connected');
+        addChatMessage('system', 'Connected to agent chat interface');
+    };
+    
+    ws.onmessage = (event) => {
+        console.log('Received:', event.data);
+        addChatMessage('bot', event.data);
+    };
+
+    ws.onclose = () => {
+        console.log('WebSocket disconnected');
+        setTimeout(connectWebSocket, 1000);
+    };
+}
+
+function addChatMessage(sender, content) {
+    const chatMessages = document.getElementById('chatMessages');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${sender}-message`;
+    messageDiv.textContent = content;
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function sendMessage() {
+    const input = document.getElementById('userMessage');
+    const message = input.value.trim();
+    
+    if (!message) return;
+
+    addChatMessage('user', message);
+    input.value = '';
+
+    if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+            user_id: clientId,
+            user_name: 'WebUser',
+            message: message
+        }));
+    } else {
+        addChatMessage('system', 'Not connected to chat server. Trying to reconnect...');
+        connectWebSocket();
     }
 } 
