@@ -558,13 +558,19 @@ def setup_bot():
                 }
 
                 # Process the messages using the MessageProcessor
-                results = await bot.message_processor.process_messages(channel_info, bot.message_cache[channel_id])
+                results = await bot.message_processor.process_messages(channel_info, bot.message_cache[channel_id], message_type="auto")
 
                 action_result = results.get('action')
 
                 if action_result and action_result.get('content'):
+                    decision = action_result['content'].get('decision', 'hold')
                     response_content = action_result['content']['action']['content']
-                    await message.channel.send(response_content)
+                    
+                    if decision.lower() == 'post':
+                        await message.channel.send(response_content)
+                        logging.info(f"Sent response based on accumulated messages in channel {channel_info['name']}")
+                    else:
+                        logging.info(f"Holding response for channel {channel_info['name']} based on decision: {decision}")
                 else:
                     logging.error("Message processing failed")
 
@@ -640,10 +646,10 @@ def setup_bot():
     return bot
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Run the Discord bot with selected API and model')
-    parser.add_argument('--api', choices=['ollama', 'openai', 'anthropic', 'vllm'], default='ollama', help='Choose the API to use (default: ollama)')
-    parser.add_argument('--model', type=str, help='Specify the model to use. If not provided, defaults will be used based on the API.')
-    args = parser.parse_args()
+    #parser = argparse.ArgumentParser(description='Run the Discord bot with selected API and model')
+    #parser.add_argument('--api', choices=['ollama', 'openai', 'anthropic', 'vllm'], default='ollama', help='Choose the API to use (default: ollama)')
+    #parser.add_argument('--model', type=str, help='Specify the model to use. If not provided, defaults will be used based on the API.')
+    #args = parser.parse_args()
 
     # Removed initialize_api_client(args) since we are using the agent framework
 
