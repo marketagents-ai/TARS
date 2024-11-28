@@ -20,9 +20,24 @@ class DiscordInputMessage(BaseModel):
     channel_name: str
     timestamp: str
 
+class DiscordAutoMessage(BaseModel):
+    relevance: int = Field(
+        description="A score from 0-100 indicating how relevant the messages are based on context and memory. Low scores suggest hold decision."
+    )
+    decision: Literal["hold", "post"] = Field(
+        description="Whether to post or hold the message. Use 'hold' when relevance is low or message lacks appropriate humor/context for TARS bot."
+    )
+    content: str = Field(
+        description="The actual message content to post to Discord if decision is post"
+    )
+
 class DiscordMessage(BaseModel):
-    type: Literal["markdown", "text"]
-    content: str
+    type: Literal["markdown", "text"] = Field(
+        description="Format to return response in - either as markdown or plain text"
+    )
+    content: str = Field(
+        description="The message content for TARS bot to send to Discord. Include markdown block and formatting if type is markdown."
+    )
 
 class DiscordAction(LocalAction):
     action: DiscordMessage
@@ -33,18 +48,17 @@ class DiscordAction(LocalAction):
         return cls(
             agent_id=agent_id,
             action=DiscordMessage(
-                message_type="markdown",
-                content="Sample message",
+                type="text",
+                content="Sample message"
             )
         )
 
     @classmethod
     def action_schema(cls) -> Dict[str, Any]:
-        # Return the JSON schema for the action
         return cls.model_json_schema()
 
 class DiscordObservation(BaseModel):
-    messages: List[DiscordMessage]  # Messages the agent can observe
+    messages: List[DiscordMessage]
 
 class DiscordLocalObservation(LocalObservation):
     agent_id: str

@@ -7,6 +7,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 import asyncio
 
+from market_agents.orchestrators.config import settings
 from market_agents.agents.market_agent import MarketAgent
 from market_agents.inference.message_models import LLMConfig
 from market_agents.agents.personas.persona import Persona
@@ -14,7 +15,8 @@ from market_agents.environments.environment import MultiAgentEnvironment
 from market_agents.environments.mechanisms.discord import (
     DiscordMechanism,
     DiscordActionSpace,
-    DiscordObservationSpace
+    DiscordObservationSpace,
+    DiscordAutoMessage
 )
 
 import discord
@@ -52,35 +54,24 @@ class MessageProcessor:
     async def setup_agent(self):
         """Initialize the TARS agent with persona and environment"""
         try:
-            # Load personas
-            personas_dir = Path("./market_agents/agents/personas/generated_personas")
-            existing_personas = []
+            # Load the specific persona file for the configured bot
+            persona_file = settings.bot.personas_dir / f"{settings.bot.name.lower()}.yaml"
+            if not persona_file.exists():
+                raise ValueError(f"Persona file for {settings.bot.name} not found at {persona_file}")
 
-            for filename in os.listdir(personas_dir):
-                if filename.endswith(".yaml"):
-                    with open(os.path.join(personas_dir, filename), 'r') as file:
-                        persona_data = yaml.safe_load(file)
-                        # Create Persona instance using pydantic model
-                        try:
-                            persona = Persona(
-                                name=persona_data['name'],
-                                role=persona_data['role'],
-                                persona=persona_data['persona'],
-                                objectives=persona_data['objectives'],
-                                trader_type=persona_data['trader_type'],
-                                communication_style=persona_data['communication_style'],
-                                routines=persona_data['routines'],
-                                skills=persona_data['skills']
-                            )
-                            existing_personas.append(persona)
-                        except Exception as e:
-                            logger.error(f"Error creating Persona object from {filename}: {str(e)}")
-                            continue
-
-            # Find TARS persona
-            agent_persona = next((p for p in existing_personas if p.name == "TARS"), None)
-            if not agent_persona:
-                raise ValueError("TARS persona not found in generated personas")
+            # Load the specific persona
+            with open(persona_file, 'r') as file:
+                persona_data = yaml.safe_load(file)
+                agent_persona = Persona(
+                    name=persona_data['name'],
+                    role=persona_data['role'],
+                    persona=persona_data['persona'],
+                    objectives=persona_data['objectives'],
+                    trader_type=persona_data['trader_type'],
+                    communication_style=persona_data['communication_style'],
+                    routines=persona_data['routines'],
+                    skills=persona_data['skills']
+                )
 
             # Create Discord environment
             discord_mechanism = DiscordMechanism()
@@ -92,12 +83,12 @@ class MessageProcessor:
                 max_steps=1000
             )
 
-            # Configure LLM
+            # Configure LLM using settings
             llm_config = LLMConfig(
-                client="openai",
-                model="gpt-4o",
-                temperature=0.7,
-                max_tokens=1024
+                client=settings.llm_config.client,
+                model=settings.llm_config.model,
+                temperature=settings.llm_config.temperature,
+                max_tokens=settings.llm_config.max_tokens
             )
 
             # Create agent
@@ -110,14 +101,14 @@ class MessageProcessor:
                 econ_agent=None
             )
 
-            logger.info("Agent setup completed successfully")
+            logger.info(f"Agent setup completed successfully for {settings.bot.name}")
             return True
 
         except Exception as e:
             logger.error(f"Error setting up agent: {str(e)}", exc_info=True)
             return False
 
-    async def process_messages(self, channel_info, messages):
+    async def process_messages(self, channel_info, messages, message_type=None):
         """Process messages through the agent's cognitive functions"""
         try:
             if not messages:
@@ -137,15 +128,21 @@ class MessageProcessor:
             logger.info("Starting agent cognitive functions")
 
             # Perception
-            perception_result = await self.agent.perceive('discord')
-            logger.info("Perception completed")
-            print("\nPerception Result:")
-            print("\033[94m" + json.dumps(perception_result, indent=2) + "\033[0m")
+            perception_result = None
+            if message_type and message_type == "auto":
+                perception_result = await self.agent.perceive('discord')
+                logger.info("Perception completed")
+                print("\nPerception Result:")
+                print("\033[94m" + json.dumps(perception_result, indent=2) + "\033[0m")
 
             # Action Generation
+            action_schema = None
+            if message_type and message_type == "auto":
+                action_schema = DiscordAutoMessage.model_json_schema()
             action_result = await self.agent.generate_action(
                 'discord', 
-                perception=perception_result
+                perception=perception_result,
+                action_schema=action_schema
             )
             logger.info("Action generation completed")
             print("\nAction Result:")
@@ -246,7 +243,7 @@ async def run_bot():
             print(f"Discord messages: {messages}")
 
             # Process the messages
-            results = await processor.process_messages(channel_info, messages)
+            results = await processor.process_messages(channel_info, messages, message_type="auto")
             
             if results:
                 logger.info("Message processing test completed successfully")
