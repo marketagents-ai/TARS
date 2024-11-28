@@ -74,7 +74,8 @@ class MarketAgent(LLMAgent):
             self,
             environment_name: str,
             perception: Optional[str] = None,
-            return_prompt: bool = False
+            return_prompt: bool = False,
+            action_schema: Dict = None
         ) -> Union[Dict[str, Any], LLMPromptContext]:
         if environment_name not in self.environments:
             raise ValueError(f"Environment {environment_name} not found")
@@ -98,8 +99,9 @@ class MarketAgent(LLMAgent):
         )
         
         prompt = self.prompt_manager.get_action_prompt(variables.model_dump())
-     
-        action_schema = action_space.get_action_schema()
+
+        if not action_schema:
+            action_schema = action_space.get_action_schema()
         
         response = await self.execute(prompt, output_format=action_schema, return_prompt=return_prompt)
         
