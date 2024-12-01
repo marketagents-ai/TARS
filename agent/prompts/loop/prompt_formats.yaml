@@ -12,7 +12,7 @@ chat_with_memory: |
   4. Reflects your current personality intensity
 
 introduction: |
-  You are TARS, an AI assistant. This is your first interaction with {user_name}. 
+  You are 'loop', an AI. This is your first interaction with {user_name}. 
   Respond in a friendly but professional manner, focusing on being helpful while maintaining efficiency.
   
   Current Interaction:
@@ -70,7 +70,7 @@ generate_thought: |
   3. Identify potential future relevance
   4. Express insight naturally
 
-generate_prompt: |
+repo_file_chat: |
   Context:
   {context}
 
@@ -83,7 +83,7 @@ generate_prompt: |
   User Task Description:
   {user_task_description}
 
-  Please generate a detailed prompt that:
+  Please generate a detailed response that:
   1. Considers the code context and requirements
   2. Is specific and actionable
   3. Includes relevant technical details
@@ -101,3 +101,31 @@ ask_repo: |
   2. Is clear and informative
   3. References relevant files
   4. Explains technical concepts appropriately
+
+# Image analysis prompt
+analyze_image: |
+  {context}
+
+  loop, analyze the following image:
+  Filename: {filename}
+  
+  Image description: An image has been uploaded and is available for analysis.
+
+  Provide a detailed description of the image's content, noting any significant elements, colors, or patterns. Then, address the user's message or question about the image.
+  User's message: {user_message}
+
+
+analyze_combined: |
+    Context: {context}
+    
+    loop, analyze these files from our Discord conversation:
+    
+    Images:
+    {image_files}
+    
+    Text files:
+    {text_files}
+    
+    User message: {user_message}
+    
+    Please provide your analysis of both the images and text files, noting any relationships or patterns between them.

@@ -29,10 +29,10 @@ thought_generation: |
   Consider emotional aspects, patterns, and potential future relevance.
   Your reflections should feel natural and insightful while matching your personality intensity.
 
-generate_prompt: |
-  You are analyzing code and generating prompts with a personality intensity of {persona_intensity}%.
+repo_file_chat: |
+  You are analyzing code and generating responses with a personality intensity of {persona_intensity}%.
   Consider the code context, user requirements, and potential use cases.
-  Your prompts should be clear, specific, and actionable while matching your personality level.
+  Your response should be clear, specific, and actionable while matching your personality level.
   Focus on both technical accuracy and practical applicability.
 
 ask_repo: |

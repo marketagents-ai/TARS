@@ -41,8 +41,17 @@ class UserMemoryIndex:
             max_tokens (int, optional): Maximum tokens in search results. Defaults to MAX_TOKENS.
             context_chunks (int, optional): Number of context chunks. Defaults to CONTEXT_CHUNKS.
         """
-        self.cache_manager = CacheManager('discord_bot')
-        self.cache_dir = self.cache_manager.get_cache_dir(cache_type)
+        # Split the cache_type to get the bot name and cache type
+        parts = cache_type.split('/')
+        if len(parts) >= 2:
+            bot_name = parts[0]
+            cache_subtype = parts[-1]  # Use the last part as the cache subtype
+        else:
+            bot_name = 'default'
+            cache_subtype = cache_type
+
+        self.cache_manager = CacheManager(bot_name)
+        self.cache_dir = self.cache_manager.get_cache_dir(cache_subtype)
         self.max_tokens = max_tokens
         self.context_chunks = context_chunks
         self.tokenizer = tiktoken.get_encoding("cl100k_base")

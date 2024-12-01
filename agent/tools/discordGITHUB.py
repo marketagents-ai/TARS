@@ -74,15 +74,15 @@ class GitHubRepo:
         return structure
 
 class RepoIndex:
-    def __init__(self, cache_type, max_depth=3):
+    def __init__(self, bot_name, max_depth=3):
         """Initialize the RepoIndex.
         
         Args:
-            cache_type (str): Type of cache to use (e.g., 'repo_index')
+            bot_name (str): Name of the bot for cache organization
             max_depth (int, optional): Maximum depth for repository traversal. Defaults to 3.
         """
-        self.cache_manager = CacheManager('discord_bot')
-        self.cache_dir = self.cache_manager.get_cache_dir(cache_type)
+        self.cache_manager = CacheManager(bot_name)
+        self.cache_dir = self.cache_manager.get_cache_dir('repo_index')
         self.max_depth = max_depth
         self.repo_index = defaultdict(list)
         self.stopwords = set(['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by'])
@@ -127,12 +127,19 @@ class RepoIndex:
         logging.info("Repository index cache saved successfully.")
 
     def load_cache(self):
+        """Load repository index from cache.
+        Returns True if cache was successfully loaded, False otherwise."""
+        global repo_processing_event
         repo_index_path = os.path.join(self.cache_dir, 'repo_index.pkl')
         if os.path.exists(repo_index_path):
-            with open(repo_index_path, 'rb') as f:
-                self.repo_index = defaultdict(list, pickle.load(f))
-            logging.info("Repository index cache loaded successfully.")
-            return True
+            try:
+                with open(repo_index_path, 'rb') as f:
+                    self.repo_index = defaultdict(list, pickle.load(f))
+                logging.info("Repository index cache loaded successfully.")
+                repo_processing_event.set()  # Set the event to indicate repo is ready
+                return True
+            except Exception as e:
+                logging.error(f"Error loading repository cache: {str(e)}")
         return False
 
 async def fetch_and_chunk_repo_contents(repo, memory_index, max_depth=None):
@@ -185,6 +192,8 @@ async def fetch_and_chunk_repo_contents(repo, memory_index, max_depth=None):
 
     memory_index.save_cache()
     logging.info(f"Finished processing repo: {repo.full_name}")
+
+    # set the event to indicate that the repo has been processed
 
 async def start_background_processing(repo, memory_index, max_depth=None, branch='main'):
     global repo_processing_event

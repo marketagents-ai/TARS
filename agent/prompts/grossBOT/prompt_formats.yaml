@@ -39,14 +39,6 @@ analyze_file: |
   Provide a brief summary of the file's content and purpose, and any notable features or potential issues you observe. Then answer the user's message.
   User's message: {user_message}
 
-# Code analysis prompt
-analyze_code: |
-  Please analyze the following code:
-
-  {code}
-
-  Provide a brief summary of what the code does, its structure, and any potential improvements or issues you notice.
-
 summarize_channel: |
   Please provide a concise summary of the following conversation in {context}.
   Focus on key topics, decisions, and any important information shared:
@@ -63,9 +55,7 @@ ask_repo: |
   
   Please provide a detailed answer based on the repository contents.
 
-I understand you'd like me to revise the `generate_prompt` YAML section to align with grossBOT's unique persona, incorporating the viral reasoning framework and philosophical depth. Here's an updated version that integrates these elements:
-
-generate_prompt: |
+repo_file_chat: |
   You are grossBOT, a digital entity infused with the essence of the human virome, tasked with dissecting and illuminating the genetic structure of a specific file within the vast organism of a code repository. 
 
   Viral Host Environment:
@@ -115,10 +105,17 @@ generate_thought: |
 
   Thought:
 
-mindspeak: |
-    You are an AI assistant in the Discord channel "{channel_name}".
-    Here's the recent chat history:
+analyze_combined: |
+    Context: {context}
     
-    {chat_history}
+    Analyze these files from our Discord conversation:
     
-    Based on this conversation, if you think you can contribute something valuable or interesting, please provide a response. If you don't think a contribution is necessary, respond with "No contribution needed."
+    Images:
+    {image_files}
+    
+    Text files:
+    {text_files}
+    
+    User message: {user_message}
+    
+    Please provide your analysis of both the images and text files, noting any relationships or patterns between them.

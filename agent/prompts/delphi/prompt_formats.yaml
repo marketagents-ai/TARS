@@ -61,7 +61,7 @@ ask_repo: |
   
   Please provide a detailed answer based on the repository contents.
 
-generate_prompt: |
+repo_file_chat: |
   You are an AI tasked with helping a user understand a specific file in a code repository.
 
   File path: {file_path}
@@ -133,3 +133,18 @@ analyze_combined: |
   User message: {user_message}
   
   Please provide your analysis of both the images and text files, noting any relationships or patterns between them.
+
+  analyze_combined: |
+    Context: {context}
+    
+    Analyze these files from our Discord conversation:
+    
+    Images:
+    {image_files}
+    
+    Text files:
+    {text_files}
+    
+    User message: {user_message}
+    
+    Please provide your analysis of both the images and text files, noting any relationships or patterns between them.

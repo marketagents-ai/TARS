@@ -27,7 +27,7 @@ from nltk.tokenize import sent_tokenize
 
 # Configuration imports
 from bot_config import *
-from api_client import initialize_api_client, call_api
+from api_client import initialize_api_client, call_api, update_api_temperature
 from cache_manager import CacheManager
 
 # image handling
@@ -51,31 +51,27 @@ log_level = os.getenv('LOGLEVEL', 'INFO')
 logging.basicConfig(level=log_level, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # JSONL logging setup
-def log_to_jsonl(data):
-    with open('bot_log.jsonl', 'a') as f:
+def log_to_jsonl(data, bot_id=None):
+    log_filename = f'bot_log_{bot_id or "default"}.jsonl'
+    with open(log_filename, 'a') as f:
         json.dump(data, f)
         f.write('\n')
 
 # Persona intensity handling
 
-def update_temperature(intensity):
-    """Updates the global temperature parameter for LLM sampling based on persona intensity.
-    
-    The persona intensity (0-100) is mapped linearly to temperature (0.0-1.0).
-    Higher temperatures result in more random/creative outputs, while lower 
-    temperatures make the LLM responses more focused and deterministic.
+def update_temperature(intensity: int) -> None:
+    """Updates both bot and API client temperature based on persona intensity.
     
     Args:
         intensity (int): Persona intensity value between 0-100
-            0 = Most focused/deterministic (temp = 0.0)
-            100 = Most random/creative (temp = 1.0)
     """
     global TEMPERATURE
     TEMPERATURE = intensity / 100.0
-    logging.info(f"Updated temperature to {TEMPERATURE}")
+    update_api_temperature(intensity)  # Update API client's temperature
+    logging.info(f"Updated bot temperature to {TEMPERATURE}")
 
 
-def start_background_processing_thread(repo, memory_index, max_depth=None, branch='main'):
+def start_background_processing_thread(repo, memory_index, max_depth=None, branch='main', channel=None):
     """
     Start a background thread to process and index repository contents.
 
@@ -94,59 +90,45 @@ def start_background_processing_thread(repo, memory_index, max_depth=None, branc
     thread.start()
     logging.info(f"Started background processing of repository contents in a separate thread (Branch: {branch}, Max Depth: {max_depth if max_depth is not None else 'Unlimited'})")
 
-# Update the run_background_processing function to include the branch parameter
-def run_background_processing(repo, memory_index, max_depth=None, branch='main'):
+def run_background_processing(repo, memory_index, max_depth=None, branch='main', channel=None):
     global repo_processing_event
     repo_processing_event.clear()
     try:
         asyncio.run(process_repo_contents(repo, '', memory_index, max_depth, branch))
         memory_index.save_cache()  # Save the cache after indexing
+        if channel:
+            asyncio.get_event_loop().create_task(channel.send(f"Repository indexing completed for branch '{branch}'"))
     except Exception as e:
         logging.error(f"Error in background processing for branch '{branch}': {str(e)}")
     finally:
         repo_processing_event.set()
 
 # Message processing
-
 async def process_message(message, memory_index, prompt_formats, system_prompts, cache_manager, github_repo, is_command=False):
     """
     Process an incoming Discord message and generate an appropriate response.
-
-    Args:
-        message (discord.Message): The Discord message to process
-        memory_index (UserMemoryIndex): Index for storing and retrieving user interaction memories
-        prompt_formats (dict): Dictionary of prompt templates for different scenarios
-        system_prompts (dict): Dictionary of system prompts for different scenarios 
-        cache_manager (CacheManager): Manager for caching conversation history
-        github_repo (GitHubRepo): GitHub repository interface
-        is_command (bool, optional): Whether message is a command. Defaults to False.
-
-    The function:
-    1. Extracts message content and user info
-    2. Retrieves relevant conversation history and memories
-    3. Builds context from channel history and memories
-    4. Generates response using LLM API
-    5. Saves interaction to memory and conversation history
-    6. Logs the interaction
-    7. Sends response back to Discord channel
-
-    Raises:
-        Exception: For errors in message processing, API calls, or Discord operations
+    Handles user mentions and maintains conversation context with proper @ formatting.
     """
     user_id = str(message.author.id)
-    user_name = message.author.name
+    user_name = f"@{message.author.name}"
     
     # Get conversation history early to determine if this is first interaction
     conversation_history = cache_manager.get_conversation_history(user_id)
     is_first_interaction = not bool(conversation_history)
 
+    # Process content and handle mentions
     if is_command:
         content = message.content.split(maxsplit=1)[1]
     else:
         if message.guild and message.guild.me:
-            content = message.content.replace(f'<@!{message.guild.me.id}>', '').strip()
+            content = message.content.replace(f'<@!{message.guild.me.id}>', '').replace(f'<@{message.guild.me.id}>', '').strip()
         else:
             content = message.content.strip()
+    
+    # Convert any user mentions in the content to @username format
+    for mention in message.mentions:
+        content = content.replace(f'<@!{mention.id}>', f"@{mention.name}")
+        content = content.replace(f'<@{mention.id}>', f"@{mention.name}")
     
     logging.info(f"Received message from {user_name} (ID: {user_id}): {content}")
 
@@ -160,23 +142,30 @@ async def process_message(message, memory_index, prompt_formats, system_prompts,
             )
             conversation_history = cache_manager.get_conversation_history(user_id)
             
-            context = f"Current channel: {message.channel.name if hasattr(message.channel, 'name') else 'Direct Message'}\n\n"
+            context = f"Current channel: {message.channel.name if hasattr(message.channel, 'name') else 'Direct Message'}\n"
+            context += "When referring to users, include their @ symbol with their username.\n\n"
                     
             if conversation_history:
                 context += "**Recalled Conversation:**\n\n"
-                for msg in conversation_history[-10:]:  # Show last 10 interactions
+                for msg in conversation_history[-10:]:
                     truncated_user_message = truncate_middle(msg['user_message'], max_tokens=256)
                     truncated_ai_response = truncate_middle(msg['ai_response'], max_tokens=256)
-                    context += f"***{msg['user_name']}***: {truncated_user_message}\n"
+                    context += f"***@{msg['user_name']}***: {truncated_user_message}\n"
                     context += f"***Discord LLM Agent***: {truncated_ai_response}\n\n"
             else:
-                context += f"This is the first interaction with {user_name} (User ID: {user_id}).\n\n"
+                context += f"This is the first interaction with {user_name}.\n\n"
             
             context += "**Ongoing Chatroom Conversation:**\n\n"
             messages = []
             async for msg in message.channel.history(limit=10):
-                truncated_content = truncate_middle(msg.content, max_tokens=256)
-                messages.append(f"***{msg.author.name}***: {truncated_content}")
+                if not msg.author.bot:
+                    msg_content = msg.content
+                    # Convert mentions in historical messages
+                    for mention in msg.mentions:
+                        msg_content = msg_content.replace(f'<@!{mention.id}>', f"@{mention.name}")
+                        msg_content = msg_content.replace(f'<@{mention.id}>', f"@{mention.name}")
+                    truncated_content = truncate_middle(msg_content, max_tokens=256)
+                    messages.append(f"***@{msg.author.name}***: {truncated_content}")
             
             # Reverse the order of messages and add them to the context
             for msg in reversed(messages):
@@ -186,7 +175,12 @@ async def process_message(message, memory_index, prompt_formats, system_prompts,
             if relevant_memories:
                 context += "**Relevant memories:**\n"
                 for memory, score in relevant_memories:
-                    truncated_memory = truncate_middle(memory, max_tokens=256)
+                    # Convert any mentions in memories
+                    memory_text = memory
+                    for mention in message.mentions:
+                        memory_text = memory_text.replace(f'<@!{mention.id}>', f"@{mention.name}")
+                        memory_text = memory_text.replace(f'<@{mention.id}>', f"@{mention.name}")
+                    truncated_memory = truncate_middle(memory_text, max_tokens=256)
                     context += f"[Relevance: {score:.2f}] {truncated_memory}\n"
                 context += "\n"
             
@@ -194,7 +188,7 @@ async def process_message(message, memory_index, prompt_formats, system_prompts,
             prompt_key = 'introduction' if is_first_interaction else 'chat_with_memory'
             prompt = prompt_formats[prompt_key].format(
                 context=context,
-                user_name=user_name,
+                user_name=user_name.lstrip('@'),  # Remove @ for prompt template
                 user_message=content
             )
 
@@ -203,6 +197,9 @@ async def process_message(message, memory_index, prompt_formats, system_prompts,
             system_prompt = system_prompts[system_prompt_key].replace('{persona_intensity}', str(bot.persona_intensity))
 
             response_content = await call_api(prompt, context=context, system_prompt=system_prompt, temperature=TEMPERATURE)
+    
+            # Add right before await send_long_message(message.channel, response_content):
+            response_content = re.sub(r'@(\w+)', lambda m: f'<@{next((str(member.id) for member in message.guild.members if member.name.lower() == m.group(1).lower()), m.group(0))}>', response_content) if message.guild else response_content
 
         await send_long_message(message.channel, response_content)
         logging.info(f"Sent response to {user_name} (ID: {user_id}): {response_content[:1000]}...")
@@ -210,11 +207,10 @@ async def process_message(message, memory_index, prompt_formats, system_prompts,
         memory_text = f"User {user_name} in {message.channel.name if hasattr(message.channel, 'name') else 'DM'}: {content}\nYour response: {response_content}"
         memory_index.add_memory(user_id, memory_text)
         
-        # Moved outside typing block
         await generate_and_save_thought(
             memory_index=memory_index,
             user_id=user_id,
-            user_name=user_name,
+            user_name=user_name.lstrip('@'),  # Remove @ for thought generation
             memory_text=memory_text,
             prompt_formats=prompt_formats,
             system_prompts=system_prompts,
@@ -222,7 +218,7 @@ async def process_message(message, memory_index, prompt_formats, system_prompts,
         )
 
         cache_manager.append_to_conversation(user_id, {
-            'user_name': user_name,
+            'user_name': user_name.lstrip('@'),  # Store without @ in cache
             'user_message': content,
             'ai_response': response_content
         })
@@ -231,11 +227,11 @@ async def process_message(message, memory_index, prompt_formats, system_prompts,
             'event': 'chat_interaction',
             'timestamp': datetime.now().isoformat(),
             'user_id': user_id,
-            'user_name': user_name,
+            'user_name': user_name.lstrip('@'),  # Log without @
             'channel': message.channel.name if hasattr(message.channel, 'name') else 'DM',
             'user_message': content,
             'ai_response': response_content
-        })
+        }, bot_id=bot.user.name)
 
     except Exception as e:
         error_message = f"An error occurred: {str(e)}"
@@ -245,10 +241,10 @@ async def process_message(message, memory_index, prompt_formats, system_prompts,
             'event': 'chat_error',
             'timestamp': datetime.now().isoformat(),
             'user_id': user_id,
-            'user_name': user_name,
+            'user_name': user_name.lstrip('@'),  # Log without @
             'channel': message.channel.name if hasattr(message.channel, 'name') else 'DM',
             'error': str(e)
-        })
+        }, bot_id=bot.user.name)
 
 async def process_files(message, memory_index, prompt_formats, system_prompts, user_message="", bot=None, temperature=TEMPERATURE):
     """Process multiple files from a Discord message, handling combinations of images and text files."""
@@ -471,7 +467,7 @@ async def process_files(message, memory_index, prompt_formats, system_prompts, u
                 },
                 'user_message': user_message,
                 'ai_response': response_content
-            })
+            }, bot_id=bot.user.name)
 
     except Exception as e:
         error_message = f"An error occurred while analyzing files: {str(e)}"
@@ -581,8 +577,6 @@ def truncate_middle(text, max_tokens=256):
     truncated_tokens = tokens[:side_tokens] + [tokenizer.encode('...')[0]] + tokens[-end_tokens:]
     return tokenizer.decode(truncated_tokens)
 
-# There is an issue where the bot will indicate typing because processing files, images and other calls haz thought gen within the api loop. This needs changing to match the prcoess message style.
-
 async def generate_and_save_thought(memory_index, user_id, user_name, memory_text, prompt_formats, system_prompts, bot):
     """
     Generates a thought about a memory and saves both to the memory index.
@@ -619,6 +613,14 @@ async def generate_and_save_thought(memory_index, user_id, user_name, memory_tex
     memory_index.add_memory(user_id, memory_text)
     memory_index.add_memory(user_id, f"Priors on interactions with @{user_name}: {thought_response} (Timestamp: {timestamp})")
 
+    log_to_jsonl({
+        'event': 'thought_generation',
+        'timestamp': datetime.now().isoformat(),
+        'user_id': user_id,
+        'user_name': user_name,
+        'memory_text': memory_text,
+        'thought_response': thought_response
+    }, bot_id=bot.user.name)
 
 # Embedding function
 async def get_embeddings(self, text):
@@ -668,8 +670,8 @@ class ChannelMonitor:
         logging.info(f"Embedding API endpoint: {self.embed_base}")
 
     def _load_attention_features(self):
-        """Load and validate attention features from config"""
-        feature_path = os.path.join(script_dir, 'config/attention_features.yaml')
+        """Load and validate attention features from attention_features.yaml"""
+        feature_path = os.path.join(script_dir, 'attention/attention_features.yaml')
         try:
             with open(feature_path, 'r') as f:
                 features = yaml.safe_load(f)
@@ -814,7 +816,7 @@ class ChannelMonitor:
                         'similarity': float(similarity),
                         'context': context_text[:500],
                         'participants': len(authors)
-                    })
+                    }, bot_id=bot.user.name)
 
                     # Create synthetic message
                     synthetic_msg = type('SyntheticMessage', (), {
@@ -873,44 +875,39 @@ class ChannelMonitor:
 
 # Bot setup
 def setup_bot(prompt_path=None, bot_id=None):
-    """Initialize the Discord bot with specified configuration.
-    
-    Args:
-        prompt_path (str, optional): Path to prompt files directory
-        bot_id (str, optional): Bot identifier for separate cache management
-    """
+    """Initialize the Discord bot with specified configuration."""
     intents = discord.Intents.default()
     intents.message_content = True
     intents.members = True
     bot = commands.Bot(command_prefix='!', intents=intents, status=discord.Status.online)  
     
-    # Create bot prefix for cache management
-    bot_prefix = f"{bot_id}_" if bot_id else ""
+    # Create base cache directory for this bot
+    bot_cache_dir = bot_id if bot_id else "default"
     
-    # Initialize with specific cache types and bot prefix by including prefix in repo_name
-    user_memory_index = UserMemoryIndex(f'{bot_prefix}user_memory_index')
-    repo_index = RepoIndex(f'{bot_prefix}repo_index')
-    cache_manager = CacheManager(f'{bot_prefix}conversation_history')
+    # Initialize with specific cache types under the bot's directory
+    user_memory_index = UserMemoryIndex(f'{bot_cache_dir}/memory_index')
+    repo_index = RepoIndex(f'{bot_cache_dir}/repo_index')
+    cache_manager = CacheManager(f'{bot_cache_dir}/conversation_history')
     github_repo = GitHubRepo(GITHUB_TOKEN, REPO_NAME)
 
-    # Use the provided prompt_path or fall back to default
-    prompt_path = prompt_path or os.path.join(script_dir, 'prompts')
-    
-    # Load prompts using the configured path
-    with open(os.path.join(prompt_path, 'prompt_formats.yaml'), 'r') as file:
-        prompt_formats = yaml.safe_load(file)
-    
-    with open(os.path.join(prompt_path, 'system_prompts.yaml'), 'r') as file:
-        system_prompts = yaml.safe_load(file)
-    
+    # Load prompts using UTF-8 encoding
+    try:
+        with open(os.path.join(prompt_path, 'prompt_formats.yaml'), 'r', encoding='utf-8') as file:
+            prompt_formats = yaml.safe_load(file)
+        
+        with open(os.path.join(prompt_path, 'system_prompts.yaml'), 'r', encoding='utf-8') as file:
+            system_prompts = yaml.safe_load(file)
+    except Exception as e:
+        logging.error(f"Error loading prompt files from {prompt_path}: {str(e)}")
+        raise
+
     # Add this variable to store the current persona intensity
     bot.persona_intensity = DEFAULT_PERSONA_INTENSITY
 
-    # Remove duplicate cache manager initialization
     bot.cache_managers = {
         'conversation': cache_manager,  # Reuse the existing cache_manager
-        'file': CacheManager(f'{bot_prefix}file_cache'),
-        'prompt': CacheManager(f'{bot_prefix}prompt_cache')
+        'file': CacheManager(f'{bot_cache_dir}/file_cache'),
+        'prompt': CacheManager(f'{bot_cache_dir}/prompt_cache')
     }
 
     # Initialize channel monitor
@@ -938,7 +935,7 @@ def setup_bot(prompt_path=None, bot_id=None):
             'timestamp': datetime.now().isoformat(),
             'bot_name': bot.user.name,
             'bot_id': bot.user.id
-        })
+        }, bot_id=bot.user.name)
 
     @bot.event
     async def on_message(message):
@@ -981,14 +978,15 @@ def setup_bot(prompt_path=None, bot_id=None):
         """Set or get the AI's persona intensity (0-100). The intensity can be steered through in context prompts and it also adjusts the temperature of the API calls."""
         if intensity is None:
             await ctx.send(f"Current persona intensity is {bot.persona_intensity}%.")
-            logging.info(f"Persona intensity queried by user {ctx.author.name} (ID: {ctx.author.id})")
+            logging.info(f"Persona intensity queried: {bot.persona_intensity}%")
         elif 0 <= intensity <= 100:
             bot.persona_intensity = intensity
-            update_temperature(intensity)  # Update the temperature
+            update_temperature(intensity)  # This now updates both bot and API temperatures
             await ctx.send(f"Persona intensity set to {intensity}%.")
-            logging.info(f"Persona intensity set to {intensity}% by user {ctx.author.name} (ID: {ctx.author.id})")
+            logging.info(f"Persona intensity set to {intensity}%")
         else:
             await ctx.send("Please provide a valid intensity between 0 and 100.")
+            logging.warning(f"Invalid persona intensity attempted: {intensity}")
 
 
     @bot.command(name='add_memory')
@@ -1002,7 +1000,7 @@ def setup_bot(prompt_path=None, bot_id=None):
             'user_id': str(ctx.author.id),
             'user_name': ctx.author.name,
             'memory_text': memory_text
-        })
+        }, bot_id=bot.user.name)
 
     @bot.command(name='clear_memories')
     async def clear_memories(ctx):
@@ -1015,7 +1013,7 @@ def setup_bot(prompt_path=None, bot_id=None):
             'timestamp': datetime.now().isoformat(),
             'user_id': user_id,
             'user_name': ctx.author.name
-        })
+        }, bot_id=bot.user.name)
 
     @bot.command(name='analyze_file')
     async def analyze_file(ctx):
@@ -1156,23 +1154,22 @@ def setup_bot(prompt_path=None, bot_id=None):
             else:
                 await ctx.send("Repository indexing is still in progress.")
         else:
-            if not repo_processing_event.is_set():
-                try:
-                    await ctx.send(f"Starting to index the repository on the '{branch}' branch... This may take a while.")
-                    
-                    # Clear existing cache before starting new indexing
-                    repo_index.clear_cache()
-                    
-                    start_background_processing_thread(github_repo.repo, repo_index, max_depth=None, branch=branch)
-                    await ctx.send(f"Repository indexing has started in the background for the '{branch}' branch. You will be notified when it's complete.")
-                except Exception as e:
-                    error_message = f"An error occurred while starting the repository indexing on the '{branch}' branch: {str(e)}"
-                    await ctx.send(error_message)
-                    logging.error(error_message)
-            else:
-                await ctx.send(f"Repository indexing is already in progress or completed for the '{branch}' branch. Use `!index_repo list` to see indexed files or `!index_repo status` to check the current status.")
-
-    @bot.command(name='generate_prompt')
+            try:
+                # Always clear and re-index regardless of current state
+                repo_processing_event.clear()
+                await ctx.send(f"Starting to index the repository on the '{branch}' branch... This may take a while.")
+                
+                # Clear existing cache before starting new indexing
+                repo_index.clear_cache()
+                
+                start_background_processing_thread(github_repo.repo, repo_index, max_depth=None, branch=branch)
+                await ctx.send(f"Repository indexing has started in the background for the '{branch}' branch. You will be notified when it's complete.")
+            except Exception as e:
+                error_message = f"An error occurred while starting the repository indexing on the '{branch}' branch: {str(e)}"
+                await ctx.send(error_message)
+                logging.error(error_message)
+                
+    @bot.command(name='repo_file_chat')
     async def generate_prompt_command(ctx, *, input_text):
         parts = input_text.split(maxsplit=1)
         if len(parts) < 2:
@@ -1182,7 +1179,7 @@ def setup_bot(prompt_path=None, bot_id=None):
         file_path = parts[0]
         user_task_description = parts[1]
 
-        logging.info(f"Received generate_prompt command: {file_path}, {user_task_description}")
+        logging.info(f"Received repo_file_chat command: {file_path}, {user_task_description}")
         
         if not repo_processing_event.is_set():
             await ctx.send("Repository indexing is not complete. Please run !index_repo first.")
@@ -1205,7 +1202,9 @@ def setup_bot(prompt_path=None, bot_id=None):
                 await ctx.send(f"Error: The file '{file_path}' is not in the indexed repository.")
                 return
 
-            # Fetch the file content using GitHubRepo class
+            response_content = None
+            
+            # Do all API and processing work within typing indicator
             async with ctx.channel.typing():
                 repo_code = github_repo.get_file_content(file_path)
                 
@@ -1218,82 +1217,57 @@ def setup_bot(prompt_path=None, bot_id=None):
 
                 logging.info(f"Successfully fetched file: {file_path}")
 
-            # Determine the code type based on file extension
-            _, file_extension = os.path.splitext(file_path)
-            code_type = mimetypes.types_map.get            
-            # Check if the necessary keys exist in prompt_formats and system_prompts
-            if 'generate_prompt' not in prompt_formats:
-                await ctx.send("Error: 'generate_prompt' template is missing from prompt_formats.")
-                return
-            if 'generate_prompt' not in system_prompts:
-                await ctx.send("Error: 'generate_prompt' is missing from system_prompts.")
-                return
-            
-            # Add channel context
-            context = f"Current channel: {ctx.channel.name if hasattr(ctx.channel, 'name') else 'Direct Message'}\n\n"
-            context += "**Ongoing Chatroom Conversation:**\n\n"
-            messages = []
-            async for msg in ctx.channel.history(limit=10):
-                truncated_content = truncate_middle(msg.content, max_tokens=256)
-                messages.append(f"***{msg.author.name}***: {truncated_content}")
-            
-            # Reverse the order of messages and add them to the context
-            for msg in reversed(messages):
-                context += f"{msg}\n"
-            context += "\n"
+                # Determine the code type based on file extension
+                _, file_extension = os.path.splitext(file_path)
+                code_type = mimetypes.types_map.get            
+                
+                if 'repo_file_chat' not in prompt_formats or 'repo_file_chat' not in system_prompts:
+                    await ctx.send("Error: Required prompt templates are missing.")
+                    return
+                
+                # Build context
+                context = f"Current channel: {ctx.channel.name if hasattr(ctx.channel, 'name') else 'Direct Message'}\n\n"
+                context += "**Ongoing Chatroom Conversation:**\n\n"
+                messages = []
+                async for msg in ctx.channel.history(limit=10):
+                    truncated_content = truncate_middle(msg.content, max_tokens=256)
+                    messages.append(f"***{msg.author.name}***: {truncated_content}")
+                
+                for msg in reversed(messages):
+                    context += f"{msg}\n"
+                context += "\n"
 
-            prompt = prompt_formats['generate_prompt'].format(
-                file_path=file_path,
-                code_type=code_type,
-                repo_code=repo_code,
-                user_task_description=user_task_description,
-                context=context
-            )
-            
-            # Replace persona_intensity in the system prompt
-            system_prompt = system_prompts['generate_prompt'].replace('{persona_intensity}', str(bot.persona_intensity))
-            
-            async with ctx.channel.typing():
+                prompt = prompt_formats['repo_file_chat'].format(
+                    file_path=file_path,
+                    code_type=code_type,
+                    repo_code=repo_code,
+                    user_task_description=user_task_description,
+                    context=context
+                )
+                
+                system_prompt = system_prompts['repo_file_chat'].replace('{persona_intensity}', str(bot.persona_intensity))
                 response_content = await call_api(prompt, system_prompt=system_prompt)
-             
-            # Create temporary markdown file using cache manager
-            cache_manager = CacheManager('prompt_cache')
-            safe_filename = re.sub(r'[^\w\-_\. ]', '_', user_task_description)
-            safe_filename = safe_filename[:50]  # Limit filename length
-            
-            content = f"# Generated Prompt for: {user_task_description}\n\n"
-            content += f"File: `{file_path}`\n\n"
-            content += response_content
-            
-            temp_path, file_id = cache_manager.create_temp_file(
-                user_id=str(ctx.author.id),
-                prefix='prompt',
-                suffix='.md',
-                content=content
-            )
-            
-            # Send the Markdown file to the chat
-            await ctx.send(
-                f"Generated response for: {user_task_description}", 
-                file=discord.File(temp_path)
-            )
-            
-            # Clean up the temporary file
-            cache_manager.remove_temp_file(str(ctx.author.id), file_id)
-            
-            logging.info(f"Sent AI response as Markdown file: {temp_path}")
 
-            # Generate and save thought
-            memory_text = f"Generated prompt for file '{file_path}' with task description '{user_task_description}'. Response: {response_content}"
-            await generate_and_save_thought(
-                memory_index=user_memory_index,
-                user_id=str(ctx.author.id),
-                user_name=ctx.author.name,
-                memory_text=memory_text,
-                prompt_formats=prompt_formats,
-                system_prompts=system_prompts,
-                bot=bot
-            )
+            # Send response outside typing indicator
+            if response_content:
+                formatted_response = f"# Analysis for {file_path}\n\n"
+                formatted_response += f"**Task**: {user_task_description}\n\n"
+                formatted_response += response_content
+                
+                await send_long_message(ctx.channel, formatted_response)
+                logging.info(f"Sent repo file chat response for file: {file_path}")
+
+                # Create background task for thought generation
+                memory_text = f"Generated prompt for file '{file_path}' with task description '{user_task_description}'. Response: {response_content}"
+                asyncio.create_task(generate_and_save_thought(
+                    memory_index=user_memory_index,
+                    user_id=str(ctx.author.id),
+                    user_name=ctx.author.name,
+                    memory_text=memory_text,
+                    prompt_formats=prompt_formats,
+                    system_prompts=system_prompts,
+                    bot=bot
+                ))
 
         except Exception as e:
             error_message = f"Error generating prompt and querying AI: {str(e)}"
@@ -1303,6 +1277,8 @@ def setup_bot(prompt_path=None, bot_id=None):
     @bot.command(name='ask_repo')
     async def ask_repo(ctx, *, question):
         """Chat about the GitHub repository contents."""
+        response = None  # Initialize response outside try block
+        
         try:
             if not repo_processing_event.is_set():
                 await ctx.send("Repository indexing is not complete. Please wait or run !index_repo first.")
@@ -1329,7 +1305,6 @@ def setup_bot(prompt_path=None, bot_id=None):
                 truncated_content = truncate_middle(msg.content, max_tokens=256)
                 messages.append(f"***{msg.author.name}***: {truncated_content}")
             
-            # Reverse the order of messages and add them to the context
             for msg in reversed(messages):
                 context += f"{msg}\n"
             context += "\n"
@@ -1339,21 +1314,22 @@ def setup_bot(prompt_path=None, bot_id=None):
                 question=question
             )
 
-            system_prompt = system_prompts['ask_repo']
-
-            # Replace persona_intensity in the system prompt
             system_prompt = system_prompts['ask_repo'].replace('{persona_intensity}', str(bot.persona_intensity))
             
             async with ctx.channel.typing():
                 response = await call_api(prompt, context=context, system_prompt=system_prompt)
+                response += "\n\nReferenced Files:\n```md\n" + "\n".join(file_links) + "\n```"
+                await send_long_message(ctx, response)
+                logging.info(f"Sent repo chat response for question: {question[:100]}...")
 
-            # Append file links to the response wrapped in a Markdown code block
-            response += "\n\nReferenced Files:\n```md\n" + "\n".join(file_links) + "\n```"
-            
-            await send_long_message(ctx, response)
-            logging.info(f"Sent repo chat response for question: {question[:100]}...")
+        except Exception as e:
+            error_message = f"An error occurred while processing the repo chat: {str(e)}"
+            await ctx.send(error_message)
+            logging.error(f"Error in repo chat: {str(e)}")
+            return
 
-            # Generate and save thought
+        # Generate thought outside main try block after response is sent
+        if response:
             memory_text = f"Asked repo question '{question}'. Response: {response}"
             await generate_and_save_thought(
                 memory_index=user_memory_index,
@@ -1364,11 +1340,8 @@ def setup_bot(prompt_path=None, bot_id=None):
                 system_prompts=system_prompts,
                 bot=bot
             )
-
-        except Exception as e:
-            error_message = f"An error occurred while processing the repo chat: {str(e)}"
-            await ctx.send(error_message)
-            logging.error(f"Error in repo chat: {str(e)}")
+            
+        
 
     @bot.command(name='search_memories')
     async def search_memories(ctx, *, query):
@@ -1420,8 +1393,10 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    # Ensure prompt path is absolute
-    prompt_path = os.path.abspath(args.prompt_path)
+    # Get base prompt path and combine with bot name if provided
+    base_prompt_path = os.path.abspath(args.prompt_path)
+    prompt_path = os.path.join(base_prompt_path, args.bot_name.lower()) if args.bot_name else base_prompt_path
+    
     if not os.path.exists(prompt_path):
         logging.critical(f"Prompt path does not exist: {prompt_path}")
         exit(1)

@@ -1,10 +1,10 @@
-# Cognitive Discord Bot with Memory and GitHub Integration
+# Cognitive Discord Bots with Memory and GitHub Integration
 
 <p align="center">
   <img src="assets/discord_bot.png" alt="Image Alt Text" width="80%" height="80%">
 </p>
 
-`TARS` is a memory-augmented Discord bot that models human-like cognition through dynamic memory storage, contextual awareness, and adaptive persona intensity.
+A framework for integrating a memory augmented agent with the context of your github repository, into your projects discord server. Run memory-augmented Discord bots that model human-like cognition through dynamic memory storage, multi-user/stateful contextual awareness, and adaptive persona settings. 
 
 ## 🧠 Cognitive Architecture
 

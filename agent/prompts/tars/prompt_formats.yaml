@@ -61,7 +61,7 @@ ask_repo: |
   
   Please provide a detailed answer based on the repository contents.
 
-generate_prompt: |
+repo_file_chat: |
   You are an AI tasked with helping a user understand a specific file in a code repository.
 
   File path: {file_path}

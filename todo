@@ -1,3 +1,24 @@
+RN:
+
+1. add social media assets to all character sheets.
+2. fix cache manager temp file deletion recursion error. images will currently use os to create the temp folder in project root.
+
+CURRENT TODO:
+
 1. the gui needs to be updated to allow for multiple agents showing each instanced index in a drop down menu. from the cache folder.
 2. the gui chat interface needs to be able to select prompt folder from a drop down named after the folder in agent/prompts
-3. I need to go to bed.
+3. these need to be a single dropdown menu in the gui that populates the index folder and prompt folder options.
+4. keep tidying code base.
+5. prompt folders need to contain all person a assets.
+
+SHORT TERM TODO:
+
+1. create a embedding index as a seperate index pickle adding backwards comparibility to un-embedded indexes.
+2. update the inverted index to be a hybrid index that uses the embedding index for the lookup table and the bm25 for the inverted index.
+3. update the discord bot to use the new index.
+
+LONG TERM TODO:
+
+1. the pickle index needs to be updated to use out sql instance, this will involve writing a new inverted bm25 indexing function.
+2. replace api inference with the market_agents inference stack.
+

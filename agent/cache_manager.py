@@ -8,31 +8,19 @@ from datetime import datetime, timedelta
 import uuid
 
 class CacheManager:
-    def __init__(self, repo_name, max_history=5, temp_file_ttl=3600):
-        """Initialize cache manager with repository name and conversation history limit.
-        
-        Args:
-            repo_name (str): Name of the repository for cache organization
-            max_history (int, optional): Maximum number of conversation entries to keep. Defaults to 5.
-            temp_file_ttl (int, optional): Time to live for temporary files in seconds. Defaults to 1 hour.
-        """
-        self.repo_name = repo_name
+    def __init__(self, bot_name, max_history=10, temp_file_ttl=3600):
+        """Initialize cache manager with bot name and conversation history limit."""
+        self.bot_name = bot_name
         self.max_history = max_history
         self.temp_file_ttl = temp_file_ttl
-        self.base_cache_dir = os.path.join('cache', self.repo_name)
-        self.conversation_dir = os.path.join(self.base_cache_dir, 'conversations')
-        self.temp_base_dir = os.path.join(self.base_cache_dir, 'temp')
+        self.base_cache_dir = os.path.join('cache', self.bot_name)
         
-        # Create necessary directories
-        for directory in [self.conversation_dir, self.temp_base_dir]:
-            os.makedirs(directory, exist_ok=True)
-            
-        # Clean up old temporary files on initialization
-        self.cleanup_temp_files()
+        # Only create the base bot directory
+        os.makedirs(self.base_cache_dir, exist_ok=True)
 
     def get_conversation_history(self, user_id):
         """Retrieves conversation history for a user from JSONL file, up to max_history messages."""
-        file_path = os.path.join(self.conversation_dir, f"{user_id}.jsonl")
+        file_path = os.path.join(self.get_conversation_dir(), f"{user_id}.jsonl")
         history = deque(maxlen=self.max_history)
         if os.path.exists(file_path):
             with open(file_path, 'r') as f:
@@ -46,7 +34,7 @@ class CacheManager:
         history.append(message)
         if len(history) > self.max_history:
             history = history[-self.max_history:]
-        file_path = os.path.join(self.conversation_dir, f"{user_id}.jsonl")
+        file_path = os.path.join(self.get_conversation_dir(), f"{user_id}.jsonl")
         with open(file_path, 'w') as f:
             for item in history:
                 f.write(json.dumps(item) + '\n')
@@ -57,6 +45,16 @@ class CacheManager:
         os.makedirs(cache_dir, exist_ok=True)
         return cache_dir
 
+    def get_conversation_dir(self):
+        """Gets the conversation directory, creating it if needed."""
+        return self.get_cache_dir('conversations')
+
+    def get_temp_dir(self):
+        """Gets the temp directory, creating it if needed."""
+        temp_dir = self.get_cache_dir('temp')
+        self.cleanup_temp_files()  # Only clean temp files when temp dir is actually used
+        return temp_dir
+
     def get_user_temp_dir(self, user_id):
         """Get or create a temporary directory for a specific user.
         
@@ -66,7 +64,7 @@ class CacheManager:
         Returns:
             str: Path to the user's temporary directory
         """
-        user_temp_dir = os.path.join(self.temp_base_dir, str(user_id))
+        user_temp_dir = os.path.join(self.get_temp_dir(), str(user_id))
         os.makedirs(user_temp_dir, exist_ok=True)
         return user_temp_dir
 
@@ -157,17 +155,14 @@ class CacheManager:
             return None
 
     def cleanup_temp_files(self, force=False):
-        """Removes temporary files older than TTL.
-        
-        Args:
-            force (bool, optional): If True, removes all temporary files regardless of age
-        """
+        """Removes temporary files older than TTL."""
         current_time = datetime.now()
+        temp_dir = self.get_cache_dir('temp')  # Get the path once
         
         try:
             # Iterate through user directories
-            for user_id in os.listdir(self.temp_base_dir):
-                user_temp_dir = os.path.join(self.temp_base_dir, user_id)
+            for user_id in os.listdir(temp_dir):  # Use temp_dir instead of calling get_temp_dir()
+                user_temp_dir = os.path.join(temp_dir, user_id)  # Use temp_dir instead of calling get_temp_dir()
                 if not os.path.isdir(user_temp_dir):
                     continue
                     

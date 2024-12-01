@@ -146,3 +146,362 @@ That friendly greeting and introduction s...
 
 That initial greeting seemed to go well...
 2024-11-19 22:48:54,111 - INFO - WebSocket client web_0nn3qyr1s disconnected
+2024-11-27 20:22:55,554 - INFO - Initialized API client with anthropic
+2024-11-27 20:22:55,555 - INFO - Initialized API client with anthropic
+2024-11-27 20:22:55,555 - INFO - Initializing memory manager with path: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\default\memory_cache.pkl
+2024-11-27 20:22:55,555 - WARNING - No pickle file found at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\default\memory_cache.pkl
+2024-11-27 20:22:55,555 - ERROR - Error loading prompts: [Errno 2] No such file or directory: 'C:\\Users\\frase\\OneDrive\\Desktop\\CODE\\marketAGENTS\\TARS\\agent\\prompts\\default\\prompt_formats.yaml'
+2024-11-27 20:22:55,562 - INFO - Found pickle file at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\web_memory.pkl
+2024-11-27 20:22:55,571 - INFO - Loaded 35 memories
+2024-11-27 20:22:55,571 - INFO - Loaded 2 users
+2024-11-27 20:22:55,571 - INFO - Loaded 3404 index entries
+2024-11-27 20:23:00,716 - INFO - Project root directory: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS
+2024-11-27 20:23:00,717 - INFO - Looking for cache at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-27 20:23:00,718 - INFO - Cache directory exists: True
+2024-11-27 20:23:00,718 - INFO - Cache file exists: True
+2024-11-27 20:23:00,718 - INFO - Cache file size: 2352345 bytes
+2024-11-27 20:23:00,718 - INFO - Found pickle file at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-27 20:23:00,745 - INFO - Loaded 1363 memories
+2024-11-27 20:23:00,745 - INFO - Loaded 10 users
+2024-11-27 20:23:00,746 - INFO - Loaded 241754 index entries
+2024-11-27 20:26:31,614 - INFO - WebSocket client web_lfmwyzpqc disconnected
+2024-11-27 20:26:33,249 - INFO - Initialized API client with anthropic
+2024-11-27 20:26:53,320 - INFO - Initialized API client with anthropic
+2024-11-27 20:26:53,321 - INFO - Initialized API client with anthropic
+2024-11-27 20:26:53,322 - INFO - Initializing memory manager with path: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-27 20:26:53,323 - INFO - Found pickle file at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-27 20:26:53,338 - INFO - Loaded 1363 memories
+2024-11-27 20:26:53,339 - INFO - Loaded 10 users
+2024-11-27 20:26:53,340 - INFO - Loaded 241754 index entries
+2024-11-27 20:26:53,343 - INFO - Successfully loaded prompt files
+2024-11-27 20:26:53,349 - INFO - Found pickle file at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\web_memory.pkl
+2024-11-27 20:26:53,350 - INFO - Loaded 35 memories
+2024-11-27 20:26:53,350 - INFO - Loaded 2 users
+2024-11-27 20:26:53,350 - INFO - Loaded 3404 index entries
+2024-11-27 20:26:57,453 - INFO - WebSocket client web_lfmwyzpqc disconnected
+2024-11-27 20:26:57,483 - INFO - Project root directory: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS
+2024-11-27 20:26:57,484 - INFO - Looking for cache at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-27 20:26:57,484 - INFO - Cache directory exists: True
+2024-11-27 20:26:57,485 - INFO - Cache file exists: True
+2024-11-27 20:26:57,486 - INFO - Cache file size: 2352345 bytes
+2024-11-27 20:26:57,487 - INFO - Found pickle file at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-27 20:26:57,540 - INFO - Loaded 1363 memories
+2024-11-27 20:26:57,541 - INFO - Loaded 10 users
+2024-11-27 20:26:57,542 - INFO - Loaded 241754 index entries
+2024-11-27 20:27:02,496 - INFO - WebSocket client web_ie3ihvyfr disconnected
+2024-11-27 20:27:48,786 - INFO - WebSocket client web_v1syl40lj disconnected
+2024-11-27 20:27:50,391 - INFO - Initialized API client with anthropic
+2024-11-27 20:27:50,392 - INFO - Initialized API client with anthropic
+2024-11-27 20:27:50,393 - INFO - Initializing memory manager with path: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-27 20:27:50,393 - INFO - Found pickle file at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-27 20:27:50,403 - INFO - Loaded 1363 memories
+2024-11-27 20:27:50,404 - INFO - Loaded 10 users
+2024-11-27 20:27:50,405 - INFO - Loaded 241754 index entries
+2024-11-27 20:27:50,408 - INFO - Successfully loaded prompt files
+2024-11-27 20:27:50,414 - INFO - Found pickle file at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\web_memory.pkl
+2024-11-27 20:27:50,415 - INFO - Loaded 35 memories
+2024-11-27 20:27:50,415 - INFO - Loaded 2 users
+2024-11-27 20:27:50,415 - INFO - Loaded 3404 index entries
+2024-11-27 20:28:15,892 - INFO - WebSocket client web_v1syl40lj disconnected
+2024-11-27 20:28:15,918 - INFO - Project root directory: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS
+2024-11-27 20:28:15,918 - INFO - Looking for cache at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-27 20:28:15,919 - INFO - Cache directory exists: True
+2024-11-27 20:28:15,919 - INFO - Cache file exists: True
+2024-11-27 20:28:15,919 - INFO - Cache file size: 2352345 bytes
+2024-11-27 20:28:15,920 - INFO - Found pickle file at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-27 20:28:15,932 - INFO - Loaded 1363 memories
+2024-11-27 20:28:15,932 - INFO - Loaded 10 users
+2024-11-27 20:28:15,933 - INFO - Loaded 241754 index entries
+2024-11-27 21:39:29,792 - INFO - WebSocket client web_lqcs30dmc disconnected
+2024-11-28 19:33:02,691 - INFO - Initialized API client with anthropic
+2024-11-28 19:33:02,691 - INFO - Found pickle file at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\web_memory.pkl
+2024-11-28 19:33:02,718 - INFO - Loaded 35 memories
+2024-11-28 19:33:02,718 - INFO - Loaded 2 users
+2024-11-28 19:33:02,718 - INFO - Loaded 3404 index entries
+2024-11-28 19:33:07,041 - INFO - Project root directory: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS
+2024-11-28 19:33:07,041 - INFO - Looking for cache at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-28 19:33:07,041 - INFO - Cache directory exists: True
+2024-11-28 19:33:07,041 - INFO - Cache file exists: True
+2024-11-28 19:33:07,042 - INFO - Cache file size: 2352345 bytes
+2024-11-28 19:33:07,042 - INFO - Found pickle file at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-28 19:33:07,064 - INFO - Loaded 1363 memories
+2024-11-28 19:33:07,064 - INFO - Loaded 10 users
+2024-11-28 19:33:07,065 - INFO - Loaded 241754 index entries
+2024-11-28 19:35:20,670 - INFO - Initialized API client with anthropic
+2024-11-28 19:35:20,670 - INFO - Found pickle file at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\web_memory.pkl
+2024-11-28 19:35:20,671 - INFO - Loaded 35 memories
+2024-11-28 19:35:20,671 - INFO - Loaded 2 users
+2024-11-28 19:35:20,671 - INFO - Loaded 3404 index entries
+2024-11-28 19:36:09,149 - INFO - Initialized API client with anthropic
+2024-11-28 19:36:38,722 - INFO - Initialized API client with anthropic
+2024-11-28 19:37:34,071 - INFO - Initialized API client with anthropic
+2024-11-28 19:37:37,244 - INFO - Project root directory: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS
+2024-11-28 19:37:37,244 - INFO - Looking for cache at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-28 19:37:37,245 - INFO - Cache directory exists: True
+2024-11-28 19:37:37,245 - INFO - Cache file exists: True
+2024-11-28 19:37:37,245 - INFO - Cache file size: 2352345 bytes
+2024-11-28 19:37:37,246 - INFO - Found pickle file at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-28 19:37:37,262 - INFO - Loaded 1363 memories
+2024-11-28 19:37:37,263 - INFO - Loaded 10 users
+2024-11-28 19:37:37,263 - INFO - Loaded 241754 index entries
+2024-11-28 19:39:20,479 - INFO - Initialized API client with anthropic
+2024-11-28 19:39:35,044 - INFO - Initialized API client with anthropic
+2024-11-28 19:39:35,044 - INFO - Initialized API client with anthropic
+2024-11-28 19:39:35,045 - INFO - Initializing memory manager with path: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-28 19:39:35,045 - INFO - Found pickle file at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-28 19:39:35,058 - INFO - Loaded 1363 memories
+2024-11-28 19:39:35,058 - INFO - Loaded 10 users
+2024-11-28 19:39:35,059 - INFO - Loaded 241754 index entries
+2024-11-28 19:39:35,062 - INFO - Successfully loaded prompt files
+2024-11-28 19:39:35,069 - INFO - Found pickle file at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\web_memory.pkl
+2024-11-28 19:39:35,072 - INFO - Loaded 35 memories
+2024-11-28 19:39:35,072 - INFO - Loaded 2 users
+2024-11-28 19:39:35,072 - INFO - Loaded 3404 index entries
+2024-11-28 19:39:39,857 - INFO - Initialized API client with anthropic
+2024-11-28 19:39:39,858 - INFO - Initialized API client with anthropic
+2024-11-28 19:39:39,858 - INFO - Initializing memory manager with path: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-28 19:39:39,858 - INFO - Found pickle file at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-28 19:39:39,869 - INFO - Loaded 1363 memories
+2024-11-28 19:39:39,870 - INFO - Loaded 10 users
+2024-11-28 19:39:39,870 - INFO - Loaded 241754 index entries
+2024-11-28 19:39:39,874 - INFO - Successfully loaded prompt files
+2024-11-28 19:39:39,881 - INFO - Found pickle file at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\web_memory.pkl
+2024-11-28 19:39:39,882 - INFO - Loaded 35 memories
+2024-11-28 19:39:39,882 - INFO - Loaded 2 users
+2024-11-28 19:39:39,882 - INFO - Loaded 3404 index entries
+2024-11-28 19:39:42,201 - INFO - Project root directory: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS
+2024-11-28 19:39:42,202 - INFO - Looking for cache at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-28 19:39:42,202 - INFO - Cache directory exists: True
+2024-11-28 19:39:42,202 - INFO - Cache file exists: True
+2024-11-28 19:39:42,202 - INFO - Cache file size: 2352345 bytes
+2024-11-28 19:39:42,203 - INFO - Found pickle file at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-28 19:39:42,214 - INFO - Loaded 1363 memories
+2024-11-28 19:39:42,215 - INFO - Loaded 10 users
+2024-11-28 19:39:42,215 - INFO - Loaded 241754 index entries
+2024-11-28 19:39:58,685 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2024-11-28 19:40:06,090 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2024-11-28 19:40:06,098 - INFO - Saved 1364 memories to C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-28 19:40:06,106 - INFO - Saved 1365 memories to C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-28 19:40:06,106 - INFO - Saved thought for user WebUser: Here is a reflective thought on that initial interaction:
+
+That first greeting set a warm and positi...
+2024-11-28 19:40:12,701 - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2024-11-28 19:40:12,710 - INFO - Saved 1366 memories to C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-28 19:40:12,717 - INFO - Saved 1367 memories to C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-28 19:40:12,717 - INFO - Saved thought for user WebUser: Here is a reflective thought on that recent interaction, considering patterns, emotional elements, p...
+2024-11-28 20:27:40,947 - INFO - WebSocket client web_evmhi3yqh disconnected
+2024-11-28 20:27:42,605 - INFO - Initialized API client with anthropic
+2024-11-28 20:27:42,605 - INFO - Initialized API client with anthropic
+2024-11-28 20:27:42,605 - INFO - Initializing memory manager with path: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-28 20:27:42,606 - INFO - Found pickle file at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-28 20:27:42,621 - INFO - Loaded 1367 memories
+2024-11-28 20:27:42,622 - INFO - Loaded 11 users
+2024-11-28 20:27:42,623 - INFO - Loaded 242177 index entries
+2024-11-28 20:27:42,626 - INFO - Successfully loaded prompt files
+2024-11-28 20:27:42,633 - INFO - Found pickle file at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\web_memory.pkl
+2024-11-28 20:27:42,634 - INFO - Loaded 35 memories
+2024-11-28 20:27:42,634 - INFO - Loaded 2 users
+2024-11-28 20:27:42,634 - INFO - Loaded 3404 index entries
+2024-11-28 20:28:24,835 - INFO - WebSocket client web_evmhi3yqh disconnected
+2024-11-28 20:28:26,440 - INFO - Initialized API client with anthropic
+2024-11-28 20:28:26,442 - INFO - Initialized API client with anthropic
+2024-11-28 20:28:26,442 - INFO - Initializing memory manager with path: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\CASFY\memory_cache.pkl
+2024-11-28 20:28:26,442 - WARNING - No pickle file found at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\CASFY\memory_cache.pkl
+2024-11-28 20:28:26,448 - INFO - Successfully loaded prompt files
+2024-11-28 20:28:26,455 - INFO - Found pickle file at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\web_memory.pkl
+2024-11-28 20:28:26,456 - INFO - Loaded 35 memories
+2024-11-28 20:28:26,456 - INFO - Loaded 2 users
+2024-11-28 20:28:26,456 - INFO - Loaded 3404 index entries
+2024-11-28 20:29:09,111 - INFO - WebSocket client web_evmhi3yqh disconnected
+2024-11-28 20:29:10,682 - INFO - Initialized API client with anthropic
+2024-11-28 20:29:10,682 - INFO - Initialized API client with anthropic
+2024-11-28 20:29:10,683 - INFO - Initializing memory manager with path: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\CASFY\memory_cache.pkl
+2024-11-28 20:29:10,683 - WARNING - No pickle file found at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\CASFY\memory_cache.pkl
+2024-11-28 20:29:10,689 - INFO - Successfully loaded prompt files
+2024-11-28 20:29:10,694 - INFO - Found pickle file at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\web_memory.pkl
+2024-11-28 20:29:10,694 - INFO - Loaded 35 memories
+2024-11-28 20:29:10,696 - INFO - Loaded 2 users
+2024-11-28 20:29:10,696 - INFO - Loaded 3404 index entries
+2024-11-28 20:29:54,574 - INFO - WebSocket client web_evmhi3yqh disconnected
+2024-11-28 20:30:08,377 - INFO - Initialized API client with anthropic
+2024-11-28 20:30:08,377 - INFO - Initialized API client with anthropic
+2024-11-28 20:30:08,378 - INFO - Initializing memory manager with path: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\CASFY\memory_cache.pkl
+2024-11-28 20:30:08,378 - WARNING - No pickle file found at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\CASFY\memory_cache.pkl
+2024-11-28 20:30:08,384 - INFO - Successfully loaded prompt files
+2024-11-28 20:30:08,389 - INFO - Found pickle file at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\web_memory.pkl
+2024-11-28 20:30:08,390 - INFO - Loaded 35 memories
+2024-11-28 20:30:08,390 - INFO - Loaded 2 users
+2024-11-28 20:30:08,390 - INFO - Loaded 3404 index entries
+2024-11-28 20:30:54,082 - INFO - WebSocket client web_evmhi3yqh disconnected
+2024-11-28 20:31:21,309 - INFO - Initialized API client with anthropic
+2024-11-28 20:31:21,309 - INFO - Initialized API client with anthropic
+2024-11-28 20:31:21,310 - INFO - Initializing memory manager with path: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\CASFY\memory_cache.pkl
+2024-11-28 20:31:21,310 - WARNING - No pickle file found at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\CASFY\memory_cache.pkl
+2024-11-28 20:31:21,316 - INFO - Successfully loaded prompt files
+2024-11-28 20:31:21,321 - INFO - Found pickle file at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\web_memory.pkl
+2024-11-28 20:31:21,322 - INFO - Loaded 35 memories
+2024-11-28 20:31:21,322 - INFO - Loaded 2 users
+2024-11-28 20:31:21,322 - INFO - Loaded 3404 index entries
+2024-11-28 20:32:53,426 - INFO - WebSocket client web_evmhi3yqh disconnected
+2024-11-28 20:32:55,011 - INFO - Initialized API client with anthropic
+2024-11-28 20:32:55,012 - INFO - Initialized API client with anthropic
+2024-11-28 20:32:55,012 - INFO - Initializing memory manager with path: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-28 20:32:55,012 - INFO - Found pickle file at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-28 20:32:55,023 - INFO - Loaded 1367 memories
+2024-11-28 20:32:55,023 - INFO - Loaded 11 users
+2024-11-28 20:32:55,024 - INFO - Loaded 242177 index entries
+2024-11-28 20:32:55,027 - INFO - Successfully loaded prompt files
+2024-11-28 20:32:55,034 - INFO - Found pickle file at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\web_memory.pkl
+2024-11-28 20:32:55,035 - INFO - Loaded 35 memories
+2024-11-28 20:32:55,035 - INFO - Loaded 2 users
+2024-11-28 20:32:55,036 - INFO - Loaded 3404 index entries
+2024-11-28 20:32:58,230 - INFO - WebSocket client web_evmhi3yqh disconnected
+2024-11-28 20:32:59,859 - INFO - Initialized API client with anthropic
+2024-11-28 20:32:59,860 - INFO - Initialized API client with anthropic
+2024-11-28 20:32:59,860 - INFO - Initializing memory manager with path: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-28 20:32:59,860 - INFO - Found pickle file at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-28 20:32:59,872 - INFO - Loaded 1367 memories
+2024-11-28 20:32:59,872 - INFO - Loaded 11 users
+2024-11-28 20:32:59,873 - INFO - Loaded 242177 index entries
+2024-11-28 20:32:59,876 - INFO - Successfully loaded prompt files
+2024-11-28 20:32:59,882 - INFO - Found pickle file at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\web_memory.pkl
+2024-11-28 20:32:59,883 - INFO - Loaded 35 memories
+2024-11-28 20:32:59,883 - INFO - Loaded 2 users
+2024-11-28 20:32:59,883 - INFO - Loaded 3404 index entries
+2024-11-28 20:33:05,590 - INFO - WebSocket client web_evmhi3yqh disconnected
+2024-11-28 20:33:07,195 - INFO - Initialized API client with anthropic
+2024-11-28 20:33:07,195 - INFO - Initialized API client with anthropic
+2024-11-28 20:33:07,195 - INFO - Initializing memory manager with path: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-28 20:33:07,196 - INFO - Found pickle file at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-28 20:33:07,207 - INFO - Loaded 1367 memories
+2024-11-28 20:33:07,207 - INFO - Loaded 11 users
+2024-11-28 20:33:07,208 - INFO - Loaded 242177 index entries
+2024-11-28 20:33:07,211 - INFO - Successfully loaded prompt files
+2024-11-28 20:33:07,217 - INFO - Found pickle file at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\web_memory.pkl
+2024-11-28 20:33:07,217 - INFO - Loaded 35 memories
+2024-11-28 20:33:07,218 - INFO - Loaded 2 users
+2024-11-28 20:33:07,218 - INFO - Loaded 3404 index entries
+2024-11-28 20:37:23,392 - INFO - WebSocket client web_evmhi3yqh disconnected
+2024-11-28 20:40:50,948 - INFO - Initialized API client with anthropic
+2024-11-28 20:40:50,949 - INFO - Initialized API client with anthropic
+2024-11-28 20:40:50,949 - INFO - Initializing memory manager with path: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-28 20:40:50,949 - INFO - Found pickle file at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-28 20:40:50,969 - INFO - Loaded 1367 memories
+2024-11-28 20:40:50,969 - INFO - Loaded 11 users
+2024-11-28 20:40:50,970 - INFO - Loaded 242177 index entries
+2024-11-28 20:40:50,973 - INFO - Successfully loaded prompt files
+2024-11-28 20:40:50,979 - WARNING - No pickle file found at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\web_memory.pkl
+2024-11-28 21:00:33,738 - INFO - Project root directory: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS
+2024-11-28 21:00:33,739 - INFO - Looking for cache at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-28 21:00:33,739 - INFO - Cache directory exists: True
+2024-11-28 21:00:33,739 - INFO - Cache file exists: True
+2024-11-28 21:00:33,739 - INFO - Cache file size: 2357395 bytes
+2024-11-28 21:00:33,740 - INFO - Found pickle file at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-28 21:00:33,751 - INFO - Loaded 1367 memories
+2024-11-28 21:00:33,752 - INFO - Loaded 11 users
+2024-11-28 21:00:33,753 - INFO - Loaded 242177 index entries
+2024-11-28 21:30:18,141 - INFO - WebSocket client web_rj47w1yg2 disconnected
+2024-11-28 21:30:18,142 - INFO - WebSocket client web_evmhi3yqh disconnected
+2024-11-28 21:30:19,815 - INFO - Initialized API client with anthropic
+2024-11-28 21:30:19,816 - INFO - Initialized API client with anthropic
+2024-11-28 21:30:19,816 - INFO - Initializing memory manager with path: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-28 21:30:19,816 - INFO - Found pickle file at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-28 21:30:19,828 - INFO - Loaded 1367 memories
+2024-11-28 21:30:19,828 - INFO - Loaded 11 users
+2024-11-28 21:30:19,829 - INFO - Loaded 242177 index entries
+2024-11-28 21:30:19,832 - INFO - Successfully loaded prompt files
+2024-11-28 21:30:19,839 - WARNING - No pickle file found at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\web_memory.pkl
+2024-11-28 21:31:28,265 - INFO - WebSocket client web_rj47w1yg2 disconnected
+2024-11-28 21:31:28,266 - INFO - WebSocket client web_evmhi3yqh disconnected
+2024-11-28 21:31:29,828 - INFO - Initialized API client with anthropic
+2024-11-28 21:31:29,829 - INFO - Initialized API client with anthropic
+2024-11-28 21:31:29,829 - INFO - Initializing memory manager with path: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-28 21:31:29,829 - INFO - Found pickle file at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-28 21:31:29,840 - INFO - Loaded 1367 memories
+2024-11-28 21:31:29,840 - INFO - Loaded 11 users
+2024-11-28 21:31:29,841 - INFO - Loaded 242177 index entries
+2024-11-28 21:31:29,844 - INFO - Successfully loaded prompt files
+2024-11-28 21:31:29,850 - WARNING - No pickle file found at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\web_memory.pkl
+2024-11-28 21:31:32,149 - INFO - WebSocket client web_evmhi3yqh disconnected
+2024-11-28 21:31:32,150 - INFO - WebSocket client web_rj47w1yg2 disconnected
+2024-11-28 21:31:33,744 - INFO - Initialized API client with anthropic
+2024-11-28 21:31:33,747 - INFO - Initialized API client with anthropic
+2024-11-28 21:31:33,747 - INFO - Initializing memory manager with path: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-28 21:31:33,747 - INFO - Found pickle file at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-28 21:31:33,759 - INFO - Loaded 1367 memories
+2024-11-28 21:31:33,759 - INFO - Loaded 11 users
+2024-11-28 21:31:33,760 - INFO - Loaded 242177 index entries
+2024-11-28 21:31:33,763 - INFO - Successfully loaded prompt files
+2024-11-28 21:31:33,769 - WARNING - No pickle file found at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\web_memory.pkl
+2024-11-28 21:31:41,573 - INFO - WebSocket client web_rj47w1yg2 disconnected
+2024-11-28 21:31:41,573 - INFO - WebSocket client web_evmhi3yqh disconnected
+2024-11-28 21:31:43,159 - INFO - Initialized API client with anthropic
+2024-11-28 21:31:43,159 - INFO - Initialized API client with anthropic
+2024-11-28 21:31:43,159 - INFO - Initializing memory manager with path: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-28 21:31:43,160 - INFO - Found pickle file at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-28 21:31:43,171 - INFO - Loaded 1367 memories
+2024-11-28 21:31:43,171 - INFO - Loaded 11 users
+2024-11-28 21:31:43,172 - INFO - Loaded 242177 index entries
+2024-11-28 21:31:43,175 - INFO - Successfully loaded prompt files
+2024-11-28 21:31:43,182 - WARNING - No pickle file found at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\web_memory.pkl
+2024-11-28 21:34:23,566 - INFO - WebSocket client web_evmhi3yqh disconnected
+2024-11-28 21:34:23,567 - INFO - WebSocket client web_rj47w1yg2 disconnected
+2024-11-28 21:34:25,164 - INFO - Initialized API client with anthropic
+2024-11-28 21:34:25,164 - INFO - Initialized API client with anthropic
+2024-11-28 21:34:25,164 - INFO - Initializing memory manager with path: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-28 21:34:25,164 - INFO - Found pickle file at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-28 21:34:25,176 - INFO - Loaded 1367 memories
+2024-11-28 21:34:25,177 - INFO - Loaded 11 users
+2024-11-28 21:34:25,178 - INFO - Loaded 242177 index entries
+2024-11-28 21:34:25,181 - INFO - Successfully loaded prompt files
+2024-11-28 21:34:25,187 - WARNING - No pickle file found at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\web_memory.pkl
+2024-11-28 21:36:22,461 - INFO - WebSocket client web_evmhi3yqh disconnected
+2024-11-28 21:36:22,462 - INFO - WebSocket client web_rj47w1yg2 disconnected
+2024-11-28 21:36:24,063 - INFO - Initialized API client with anthropic
+2024-11-28 21:36:24,063 - INFO - Initialized API client with anthropic
+2024-11-28 21:36:24,063 - INFO - Initializing memory manager with path: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-28 21:36:24,064 - WARNING - No pickle file found at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-28 21:36:24,067 - INFO - Successfully loaded prompt files
+2024-11-28 21:36:24,073 - WARNING - No pickle file found at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\web_memory.pkl
+2024-11-28 21:38:02,595 - INFO - WebSocket client web_rj47w1yg2 disconnected
+2024-11-28 21:38:02,596 - INFO - WebSocket client web_evmhi3yqh disconnected
+2024-11-28 21:38:04,180 - INFO - Initialized API client with anthropic
+2024-11-28 21:38:04,180 - INFO - Initialized API client with anthropic
+2024-11-28 21:38:04,180 - INFO - Initializing memory manager with path: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-28 21:38:04,181 - WARNING - No pickle file found at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-28 21:38:04,184 - INFO - Successfully loaded prompt files
+2024-11-28 21:38:04,190 - WARNING - No pickle file found at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\web_memory.pkl
+2024-11-28 21:38:17,824 - INFO - WebSocket client web_evmhi3yqh disconnected
+2024-11-28 21:38:17,825 - INFO - WebSocket client web_rj47w1yg2 disconnected
+2024-11-28 21:38:19,472 - INFO - Initialized API client with anthropic
+2024-11-28 21:38:19,472 - INFO - Initialized API client with anthropic
+2024-11-28 21:38:19,472 - INFO - Initializing memory manager with path: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-28 21:38:19,473 - WARNING - No pickle file found at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-28 21:38:19,476 - INFO - Successfully loaded prompt files
+2024-11-28 21:38:19,482 - WARNING - No pickle file found at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\web_memory.pkl
+2024-11-28 21:38:28,385 - INFO - WebSocket client web_rj47w1yg2 disconnected
+2024-11-28 21:38:28,386 - INFO - WebSocket client web_evmhi3yqh disconnected
+2024-11-28 21:38:29,921 - INFO - Initialized API client with anthropic
+2024-11-28 21:38:29,921 - INFO - Initialized API client with anthropic
+2024-11-28 21:38:29,921 - INFO - Initializing memory manager with path: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-28 21:38:29,921 - WARNING - No pickle file found at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-28 21:38:29,925 - INFO - Successfully loaded prompt files
+2024-11-28 21:38:29,929 - WARNING - No pickle file found at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\web_memory.pkl
+2024-11-28 21:39:38,705 - INFO - WebSocket client web_evmhi3yqh disconnected
+2024-11-28 21:39:38,706 - INFO - WebSocket client web_rj47w1yg2 disconnected
+2024-11-28 21:39:40,244 - INFO - Initialized API client with anthropic
+2024-11-28 21:39:40,245 - INFO - Initialized API client with anthropic
+2024-11-28 21:39:40,245 - INFO - Initializing memory manager with path: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-28 21:39:40,245 - WARNING - No pickle file found at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-28 21:39:40,249 - INFO - Successfully loaded prompt files
+2024-11-28 21:39:40,254 - WARNING - No pickle file found at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\web_memory.pkl
+2024-11-28 21:40:07,843 - INFO - WebSocket client web_rj47w1yg2 disconnected
+2024-11-28 21:40:07,845 - INFO - WebSocket client web_evmhi3yqh disconnected
+2024-11-28 21:49:34,277 - INFO - Initialized API client with anthropic
+2024-11-28 21:49:34,278 - INFO - Initialized API client with anthropic
+2024-11-28 21:49:34,278 - INFO - Initializing memory manager with path: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-28 21:49:34,279 - WARNING - No pickle file found at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\discord_bot\user_memory_index\memory_cache.pkl
+2024-11-28 21:49:34,282 - INFO - Successfully loaded prompt files
+2024-11-28 21:49:34,287 - WARNING - No pickle file found at: C:\Users\frase\OneDrive\Desktop\CODE\marketAGENTS\TARS\cache\web_memory.pkl
+2024-11-28 21:49:43,002 - INFO - WebSocket client web_evmhi3yqh disconnected
+2024-11-28 21:49:43,002 - INFO - WebSocket client web_rj47w1yg2 disconnected

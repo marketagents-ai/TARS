@@ -25,6 +25,7 @@ API_VERSION = None
 API_KEY = None
 DEPLOYMENT_NAME = None
 MODEL_NAME = None
+TEMPERATURE = 0.7  # Default temperature
 
 
 def initialize_api_client(args):
@@ -120,7 +121,27 @@ def prepare_image_content(prompt: str, image_paths: list, api_type: str) -> dict
     else:
         raise ValueError(f"Unsupported API type for image handling: {api_type}")
 
-async def call_api(prompt, context="", system_prompt="", conversation_id=None, temperature=0.7, image_paths=None):
+def update_api_temperature(intensity: int) -> None:
+    """Update the global API temperature based on persona intensity.
+    
+    Args:
+        intensity (int): Value between 0-100 representing persona intensity
+    """
+    global TEMPERATURE
+    TEMPERATURE = intensity / 100.0
+    logging.info(f"API client temperature updated to {TEMPERATURE}")
+
+async def call_api(prompt, context="", system_prompt="", conversation_id=None, temperature=None, image_paths=None):
+    """
+    Args:
+        temperature (float, optional): Override for global temperature. 
+            If None, uses global TEMPERATURE value.
+    """
+    global TEMPERATURE
+    
+    # Use provided temperature or fall back to global
+    current_temp = temperature if temperature is not None else TEMPERATURE
+    
     is_image = bool(image_paths)
     
     print(f"{Fore.YELLOW}System Prompt: {system_prompt}")
@@ -133,13 +154,13 @@ async def call_api(prompt, context="", system_prompt="", conversation_id=None, t
             formatted_content = prompt
 
         if API_TYPE == 'ollama':
-            response = await call_ollama_api(formatted_content, context, system_prompt, temperature, is_image)
+            response = await call_ollama_api(formatted_content, context, system_prompt, current_temp, is_image)
         elif API_TYPE == 'openai':
-            response = await call_openai_api(formatted_content, context, system_prompt, temperature, is_image)
+            response = await call_openai_api(formatted_content, context, system_prompt, current_temp, is_image)
         elif API_TYPE == 'anthropic':
-            response = await call_anthropic_api(formatted_content, context, system_prompt, temperature, is_image)
+            response = await call_anthropic_api(formatted_content, context, system_prompt, current_temp, is_image)
         elif API_TYPE == 'vllm':
-            response = await call_vllm_api(formatted_content, context, system_prompt, temperature)
+            response = await call_vllm_api(formatted_content, context, system_prompt, current_temp)
         else:
             raise ValueError(f"Unsupported API type: {API_TYPE}")
 
@@ -220,7 +241,7 @@ async def call_ollama_api(content, context, system_prompt, temperature, is_image
             model=MODEL_NAME,
             messages=messages,
             max_tokens=16384,
-            temperature=temperature
+            temperature=temperature + 0.5
         )
         return response.choices[0].message.content.strip()
     except Exception as e:
